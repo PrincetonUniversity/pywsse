@@ -59,7 +59,7 @@ class TokenBuilder(object):
 		:rtype: str
 		'''
 		if not nonce:
-			nonce = generate_nonce()
+			nonce = _generate_nonce()
 		if not timestamp:
 			timestamp = datetime.datetime.utcnow()
 
@@ -88,7 +88,7 @@ def make_token(username, password, nonce, timestamp):
 
 	timestamp_str = timestamp.strftime(settings.TIMESTAMP_UTC_FORMAT)
 
-	password_digest = b64_digest(nonce, timestamp_str, password)
+	password_digest = _b64_digest(nonce, timestamp_str, password)
 	encoded_nonce = base64.b64encode(_to_bytes(nonce))
 
 	fields = (
@@ -100,7 +100,9 @@ def make_token(username, password, nonce, timestamp):
 
 	return ', '.join('{k}="{v}"'.format(k = k, v = v) for k, v in fields)
 
-def parse_token(token):
+### Internal Methods
+
+def _parse_token(token):
 	'''
 	Parse the token to extract the parameters.
 
@@ -118,7 +120,7 @@ def parse_token(token):
 
 	return key_values
 
-def generate_nonce(length = None, allowed_chars = None):
+def _generate_nonce(length = None, allowed_chars = None):
 	'''
 	Generate a nonce of the given length. If the length is greater than the
 	length specified in the settings, it will be truncated to the maximum
@@ -145,7 +147,7 @@ def generate_nonce(length = None, allowed_chars = None):
 	nonce = ''.join(random.choice(allowed_chars) for _ in range(length))
 	return nonce
 
-def b64_digest(*args):
+def _b64_digest(*args):
 	'''
 	Perform a digest on the arguments using the specified algorithm in the
 	settings.
@@ -153,12 +155,12 @@ def b64_digest(*args):
 	:param args: arguments to digest
 	:rtype args: `iter` of `str` or `bytes`
 	'''
-	digest_algorithm = get_digest_algorithm()
+	digest_algorithm = _get_digest_algorithm()
 	args_str = ''.join(map(_from_bytes, args))
 
 	return base64.b64encode(digest_algorithm(_to_bytes(args_str)).digest())
 
-def get_digest_algorithm():
+def _get_digest_algorithm():
 	'''
 	Get the digest algorithm to use based on the settings.
 

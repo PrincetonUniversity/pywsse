@@ -24,9 +24,9 @@ class TestNonce(TestCase):
 		The length of a generated nonce should match what is specified or the
 		default length.
 		'''
-		self.assertEqual(len(utils.generate_nonce(10)), 10)
-		self.assertEqual(len(utils.generate_nonce()), settings.NONCE_LENGTH)
-		self.assertEqual(len(utils.generate_nonce(settings.NONCE_LENGTH + 1)),
+		self.assertEqual(len(utils._generate_nonce(10)), 10)
+		self.assertEqual(len(utils._generate_nonce()), settings.NONCE_LENGTH)
+		self.assertEqual(len(utils._generate_nonce(settings.NONCE_LENGTH + 1)),
 			settings.NONCE_LENGTH)
 
 	def test_generate_nonce_chars(self):
@@ -35,7 +35,7 @@ class TestNonce(TestCase):
 		string.
 		'''
 		allowed_chars = 'abcde'
-		nonce = utils.generate_nonce(allowed_chars = allowed_chars)
+		nonce = utils._generate_nonce(allowed_chars = allowed_chars)
 
 		for c in nonce:
 			self.assertIn(c, allowed_chars)
@@ -44,7 +44,7 @@ class TestNonce(TestCase):
 		'''
 		Nonces generated in sequence should not clash.
 		'''
-		nonces = [utils.generate_nonce() for _ in range(25)]
+		nonces = [utils._generate_nonce() for _ in range(25)]
 
 		self.assertEqual(len(set(nonces)), len(nonces))
 
@@ -76,17 +76,17 @@ class TestDigests(TestCase):
 		Getting a digest algorithm should yield the first one from the possible
 		options.
 		'''
-		self.assertEqual(utils.get_digest_algorithm(), hashlib.sha256)
+		self.assertEqual(utils._get_digest_algorithm(), hashlib.sha256)
 
 		with mock.patch.object(settings, 'ALLOWED_DIGEST_ALGORITHMS', ['SHA256']):
-			self.assertEqual(utils.get_digest_algorithm(), hashlib.sha256)
+			self.assertEqual(utils._get_digest_algorithm(), hashlib.sha256)
 
 		with mock.patch.object(settings, 'ALLOWED_DIGEST_ALGORITHMS',
 			['ABCDEF', 'SHA256']):
-			self.assertEqual(utils.get_digest_algorithm(), hashlib.sha256)
+			self.assertEqual(utils._get_digest_algorithm(), hashlib.sha256)
 
 		with mock.patch.object(settings, 'ALLOWED_DIGEST_ALGORITHMS', ['MD5']):
-			self.assertEqual(utils.get_digest_algorithm(), hashlib.md5)
+			self.assertEqual(utils._get_digest_algorithm(), hashlib.md5)
 
 	def test_get_digest_algorithm_none(self):
 		'''
@@ -95,23 +95,23 @@ class TestDigests(TestCase):
 		'''
 		with self.assertRaises(exceptions.AlgorithmNotSupported):
 			with mock.patch.object(settings, 'ALLOWED_DIGEST_ALGORITHMS', ['ABCDE']):
-				utils.get_digest_algorithm()
+				utils._get_digest_algorithm()
 
 		with self.assertRaises(exceptions.AlgorithmNotSupported):
 			with mock.patch.object(settings, 'ALLOWED_DIGEST_ALGORITHMS', []):
-				utils.get_digest_algorithm()
+				utils._get_digest_algorithm()
 
 	def test_b64_digest(self):
 		'''
 		Perform a digest using the specified algorithm of SHA1. The b64-encoded
 		digest should be returned.
 		'''
-		utils_digest = utils.b64_digest('a', 'b', 'c')
+		utils_digest = utils._b64_digest('a', 'b', 'c')
 		actual_digest = base64.b64encode(hashlib.sha256(b'abc').digest())
 		self.assertEqual(actual_digest, utils_digest)
 
-		single_digest = utils.b64_digest('abc')
-		multi_digest = utils.b64_digest('a', 'b', 'c')
+		single_digest = utils._b64_digest('abc')
+		multi_digest = utils._b64_digest('a', 'b', 'c')
 		self.assertEqual(single_digest, multi_digest)
 
 	def test_b64_digest_bytes(self):
@@ -119,16 +119,16 @@ class TestDigests(TestCase):
 		Perform a digest of bytes using the specified algorithm of SHA1.
 		The b64-encoded digest should be returned.
 		'''
-		utils_digest = utils.b64_digest(b'a', b'b', b'c')
+		utils_digest = utils._b64_digest(b'a', b'b', b'c')
 		actual_digest = base64.b64encode(hashlib.sha256(b'abc').digest())
 		self.assertEqual(actual_digest, utils_digest)
 
-		single_digest = utils.b64_digest(b'abc')
-		multi_digest = utils.b64_digest(b'a', b'b', b'c')
+		single_digest = utils._b64_digest(b'abc')
+		multi_digest = utils._b64_digest(b'a', b'b', b'c')
 		self.assertEqual(single_digest, multi_digest)
 
-		str_digest = utils.b64_digest('abc')
-		bytes_digest = utils.b64_digest(b'abc')
+		str_digest = utils._b64_digest('abc')
+		bytes_digest = utils._b64_digest(b'abc')
 		self.assertEqual(str_digest, bytes_digest)
 
 	def test_b64_digest_sha1(self):
@@ -137,7 +137,7 @@ class TestDigests(TestCase):
 		digest should be returned.
 		'''
 		with mock.patch.object(settings, 'ALLOWED_DIGEST_ALGORITHMS', ['SHA1']):
-			utils_digest = utils.b64_digest('a', 'b', 'c')
+			utils_digest = utils._b64_digest('a', 'b', 'c')
 			actual_digest = base64.b64encode(hashlib.sha1(b'abc').digest())
 
 			self.assertEqual(actual_digest, utils_digest)
@@ -216,7 +216,7 @@ class TestTokens(TestCase):
 			}
 		token = ', '.join('{}="{}"'.format(k, v) for k, v in token_params.items())
 
-		self.assertEqual(utils.parse_token(token), token_params)
+		self.assertEqual(utils._parse_token(token), token_params)
 
 	def test_parse_token_no_quotes(self):
 		'''
@@ -231,4 +231,4 @@ class TestTokens(TestCase):
 			}
 		token = ', '.join('{}={}'.format(k, v) for k, v in token_params.items())
 
-		self.assertEqual(utils.parse_token(token), token_params)
+		self.assertEqual(utils._parse_token(token), token_params)
