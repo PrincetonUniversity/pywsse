@@ -10,6 +10,7 @@ import string
 import datetime
 import hashlib
 import base64
+import re
 
 from six.moves import range
 import six
@@ -18,6 +19,17 @@ from . import settings
 from . import exceptions
 
 logger = logging.getLogger(settings.LOGGER_NAME)
+
+TOKEN_RE = re.compile(
+	r'''
+		(?P<key>\w+)\s*=\s* # Key consists of only alphanumerics
+		(?P<quote>["']?)    # Optional quote character.
+		(?P<value>.*?)      # Value is a non greedy match
+		(?P=quote)          # Closing quote equals the first.
+		($|,)               # Entry ends with comma or end of string
+	''',
+	re.VERBOSE
+)
 
 class TokenBuilder(object):
 	'''
@@ -86,7 +98,25 @@ def make_token(username, password, nonce, timestamp):
 		('Created', timestamp_str),
 		)
 
-	return ', '.join('{k}={v}'.format(k = k, v = v) for k, v in fields)
+	return ', '.join('{k}="{v}"'.format(k = k, v = v) for k, v in fields)
+
+def parse_token(token):
+	'''
+	Parse the token to extract the parameters.
+
+	:param token: token to parse
+	:type token: str
+
+	:return: dict containing (Username, PasswordDigest, Nonce, Created)
+	:rtype: dict
+	'''
+	try:
+		key_values = {match.group('key'): match.group('value')
+			for match in TOKEN_RE.finditer(token)}
+	except (AttributeError, StopIteration):
+		key_values = {}
+
+	return key_values
 
 def generate_nonce(length = None, allowed_chars = None):
 	'''

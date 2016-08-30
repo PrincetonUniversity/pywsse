@@ -164,10 +164,10 @@ class TestTokenBuilder(TestCase):
 		now = datetime.datetime(year = 2016, month = 9, day = 1)
 		
 		expected_token = ', '.join((
-			'Username=username',
-			'PasswordDigest=8p5hLaL4rzZOMdOIcX6VGscduxzAY8uNflY2I415S0Q=',
-			'Nonce=YWJjZGVm',
-			'Created=2016-09-01T00:00:00Z'
+			'Username="username"',
+			'PasswordDigest="8p5hLaL4rzZOMdOIcX6VGscduxzAY8uNflY2I415S0Q="',
+			'Nonce="YWJjZGVm"',
+			'Created="2016-09-01T00:00:00Z"'
 			))
 
 		self.assertEqual(expected_token, self.builder.make_token(nonce, now))
@@ -193,12 +193,42 @@ class TestTokens(TestCase):
 		now = datetime.datetime(year = 2016, month = 9, day = 1)
 
 		expected_token = ', '.join((
-			'Username=username',
-			'PasswordDigest=8p5hLaL4rzZOMdOIcX6VGscduxzAY8uNflY2I415S0Q=',
-			'Nonce=YWJjZGVm',
-			'Created=2016-09-01T00:00:00Z'
+			'Username="username"',
+			'PasswordDigest="8p5hLaL4rzZOMdOIcX6VGscduxzAY8uNflY2I415S0Q="',
+			'Nonce="YWJjZGVm"',
+			'Created="2016-09-01T00:00:00Z"'
 			))
 
 		received_token = utils.make_token(username, password, nonce, now)
 
 		self.assertEqual(expected_token, received_token)
+
+	def test_parse_token(self):
+		'''
+		Parse the components of a token. The resulting dictionary should contain
+		the token's parameters.
+		'''
+		token_params = {
+			'Username': 'username',
+			'PasswordDigest': '8p5hLaL4rzZOMdOIcX6VGscduxzAY8uNflY2I415S0Q',
+			'Nonce': 'YWJjZGVm',
+			'Created': '2016-09-01T00:00:00Z',
+			}
+		token = ', '.join('{}="{}"'.format(k, v) for k, v in token_params.items())
+
+		self.assertEqual(utils.parse_token(token), token_params)
+
+	def test_parse_token_no_quotes(self):
+		'''
+		Parse the components of a token without quotes surrounding the values.
+		The resulting dictionary should contain the token's parameters.
+		'''
+		token_params = {
+			'Username': 'username',
+			'PasswordDigest': '8p5hLaL4rzZOMdOIcX6VGscduxzAY8uNflY2I415S0Q',
+			'Nonce': 'YWJjZGVm',
+			'Created': '2016-09-01T00:00:00Z',
+			}
+		token = ', '.join('{}={}'.format(k, v) for k, v in token_params.items())
+
+		self.assertEqual(utils.parse_token(token), token_params)
