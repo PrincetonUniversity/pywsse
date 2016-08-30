@@ -33,15 +33,23 @@ class TokenBuilder(object):
 		self.username = username
 		self.password = password
 
-	def make_token(self):
+	def make_token(self, nonce = None, timestamp = None):
 		'''
 		Make a new WSSE token with the current username and password.
+
+		:param nonce: nonce to use in token
+		:type nonce: str
+
+		:param timestamp: timestamp the nonce was generated at
+		:type timestamp: datetime.datetime
 
 		:return: WSSE token
 		:rtype: str
 		'''
-		nonce = generate_nonce()
-		timestamp = datetime.datetime.utcnow()
+		if not nonce:
+			nonce = generate_nonce()
+		if not timestamp:
+			timestamp = datetime.datetime.utcnow()
 
 		return make_token(self.username, self.password, nonce, timestamp)
 
@@ -66,7 +74,7 @@ def make_token(username, password, nonce, timestamp):
 		logger.warning('Timestamp in make_token expired: %s (%ds duration)',
 			timestamp, settings.TIMESTAMP_DURATION)
 
-	timestamp_str = timestamp.strftime(TIMESTAMP_UTC_FORMAT)
+	timestamp_str = timestamp.strftime(settings.TIMESTAMP_UTC_FORMAT)
 
 	password_digest = b64_digest(nonce, timestamp_str, password)
 	encoded_nonce = base64.b64encode(_to_bytes(nonce))

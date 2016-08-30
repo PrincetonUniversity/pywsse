@@ -7,6 +7,7 @@
 from unittest import TestCase
 import hashlib
 import base64
+import datetime
 
 from six.moves import range
 import mock
@@ -18,12 +19,6 @@ class TestNonce(TestCase):
 	'''
 	Test functions that deal with the nonce generation and usage.
 	'''
-	def test_genenerate_nonce_str(self):
-		'''
-		Generating a nonce should yield a string.
-		'''
-		self.assertIsInstance(utils.generate_nonce(), str)
-
 	def test_generate_nonce_length(self):
 		'''
 		The length of a generated nonce should match what is specified or the
@@ -81,6 +76,8 @@ class TestDigests(TestCase):
 		Getting a digest algorithm should yield the first one from the possible
 		options.
 		'''
+		self.assertEqual(utils.get_digest_algorithm(), hashlib.sha256)
+
 		with mock.patch.object(settings, 'ALLOWED_DIGEST_ALGORITHMS', ['SHA256']):
 			self.assertEqual(utils.get_digest_algorithm(), hashlib.sha256)
 
@@ -109,40 +106,30 @@ class TestDigests(TestCase):
 		Perform a digest using the specified algorithm of SHA1. The b64-encoded
 		digest should be returned.
 		'''
-		with mock.patch.object(settings, 'ALLOWED_DIGEST_ALGORITHMS', ['SHA256']):
-			utils_digest = utils.b64_digest('a', 'b', 'c')
-			actual_digest = base64.b64encode(hashlib.sha256(b'abc').digest())
+		utils_digest = utils.b64_digest('a', 'b', 'c')
+		actual_digest = base64.b64encode(hashlib.sha256(b'abc').digest())
+		self.assertEqual(actual_digest, utils_digest)
 
-			self.assertEqual(actual_digest, utils_digest)
-
-		with mock.patch.object(settings, 'ALLOWED_DIGEST_ALGORITHMS', ['SHA256']):
-			single_digest = utils.b64_digest('abc')
-			multi_digest = utils.b64_digest('a', 'b', 'c')
-
-			self.assertEqual(single_digest, multi_digest)
+		single_digest = utils.b64_digest('abc')
+		multi_digest = utils.b64_digest('a', 'b', 'c')
+		self.assertEqual(single_digest, multi_digest)
 
 	def test_b64_digest_bytes(self):
 		'''
 		Perform a digest of bytes using the specified algorithm of SHA1.
 		The b64-encoded digest should be returned.
 		'''
-		with mock.patch.object(settings, 'ALLOWED_DIGEST_ALGORITHMS', ['SHA256']):
-			utils_digest = utils.b64_digest(b'a', b'b', b'c')
-			actual_digest = base64.b64encode(hashlib.sha256(b'abc').digest())
+		utils_digest = utils.b64_digest(b'a', b'b', b'c')
+		actual_digest = base64.b64encode(hashlib.sha256(b'abc').digest())
+		self.assertEqual(actual_digest, utils_digest)
 
-			self.assertEqual(actual_digest, utils_digest)
+		single_digest = utils.b64_digest(b'abc')
+		multi_digest = utils.b64_digest(b'a', b'b', b'c')
+		self.assertEqual(single_digest, multi_digest)
 
-		with mock.patch.object(settings, 'ALLOWED_DIGEST_ALGORITHMS', ['SHA256']):
-			single_digest = utils.b64_digest(b'abc')
-			multi_digest = utils.b64_digest(b'a', b'b', b'c')
-
-			self.assertEqual(single_digest, multi_digest)
-
-		with mock.patch.object(settings, 'ALLOWED_DIGEST_ALGORITHMS', ['SHA256']):
-			str_digest = utils.b64_digest('abc')
-			bytes_digest = utils.b64_digest(b'abc')
-
-			self.assertEqual(str_digest, bytes_digest)
+		str_digest = utils.b64_digest('abc')
+		bytes_digest = utils.b64_digest(b'abc')
+		self.assertEqual(str_digest, bytes_digest)
 
 	def test_b64_digest_sha1(self):
 		'''
@@ -154,3 +141,64 @@ class TestDigests(TestCase):
 			actual_digest = base64.b64encode(hashlib.sha1(b'abc').digest())
 
 			self.assertEqual(actual_digest, utils_digest)
+
+class TestTokenBuilder(TestCase):
+	'''
+	Test building tokens with the builder.
+	'''
+	def setUp(self):
+		'''
+		Set up the test case.
+		'''
+		username = 'username'
+		password = 'secr3t'
+
+		self.builder = utils.TokenBuilder(username, password)
+
+	def test_make_token(self):
+		'''
+		Generate a token with the TokenBuilder. It should match the proper
+		parameters.
+		'''
+		nonce = 'abcdef'
+		now = datetime.datetime(year = 2016, month = 9, day = 1)
+		
+		expected_token = ', '.join((
+			'Username=username',
+			'PasswordDigest=8p5hLaL4rzZOMdOIcX6VGscduxzAY8uNflY2I415S0Q=',
+			'Nonce=YWJjZGVm',
+			'Created=2016-09-01T00:00:00Z'
+			))
+
+		self.assertEqual(expected_token, self.builder.make_token(nonce, now))
+
+	def test_make_token_new(self):
+		'''
+		Generate a token with the TokenBuilder without a specified nonce
+		or timestamp.
+		'''
+		self.assertIsInstance(self.builder.make_token(), str)
+
+class TestTokens(TestCase):
+	'''
+	Test making and validating tokens.
+	'''
+	def test_make_token(self):
+		'''
+		Make a token. It should match the proper parameters.
+		'''
+		username = 'username'
+		password = 'secr3t'
+		nonce = 'abcdef'
+		now = datetime.datetime(year = 2016, month = 9, day = 1)
+
+		expected_token = ', '.join((
+			'Username=username',
+			'PasswordDigest=8p5hLaL4rzZOMdOIcX6VGscduxzAY8uNflY2I415S0Q=',
+			'Nonce=YWJjZGVm',
+			'Created=2016-09-01T00:00:00Z'
+			))
+
+		received_token = utils.make_token(username, password, nonce, now)
+
+		self.assertEqual(expected_token, received_token)
