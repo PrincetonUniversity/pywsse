@@ -2,11 +2,10 @@
 # py-wsse
 # Author: Rushy Panchal
 # Date: August 30th, 2016
+# Description: Test default nonce store, SQLiteNonceStore.
 
 from unittest import TestCase
 import datetime
-
-import mock
 
 from wsse import settings
 from wsse.server.default import store
