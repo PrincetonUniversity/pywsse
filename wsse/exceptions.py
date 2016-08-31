@@ -12,6 +12,12 @@ class WSSEException(Exception):
 
 class AlgorithmNotSupported(WSSEException):
 	'''
-	Should be raised when a suitable digest algorithm is not found.
+	Raised when a suitable digest algorithm is not found.
+	'''
+	pass
+
+class InvalidToken(WSSEException):
+	'''
+	Raised when a token is invalid.
 	'''
 	pass

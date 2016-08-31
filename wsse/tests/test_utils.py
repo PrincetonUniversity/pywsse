@@ -208,27 +208,40 @@ class TestTokens(TestCase):
 		Parse the components of a token. The resulting dictionary should contain
 		the token's parameters.
 		'''
-		token_params = {
-			'Username': 'username',
-			'PasswordDigest': '8p5hLaL4rzZOMdOIcX6VGscduxzAY8uNflY2I415S0Q',
-			'Nonce': 'YWJjZGVm',
-			'Created': '2016-09-01T00:00:00Z',
-			}
-		token = ', '.join('{}="{}"'.format(k, v) for k, v in token_params.items())
+		username = 'username'
+		password_digest = '8p5hLaL4rzZOMdOIcX6VGscduxzAY8uNflY2I415S0Q'
+		nonce = 'YWJjZGVm'
+		created = '2016-09-01T00:00:00Z'
 
-		self.assertEqual(utils._parse_token(token), token_params)
+		expected_values = (username, password_digest, nonce, created)
+		token = ('Username="{}", PasswordDigest="{}", Nonce="{}", ' +
+			'Created="{}"').format(*expected_values)
+		
+		self.assertEqual(utils._parse_token(token), expected_values)
 
 	def test_parse_token_no_quotes(self):
 		'''
 		Parse the components of a token without quotes surrounding the values.
 		The resulting dictionary should contain the token's parameters.
 		'''
-		token_params = {
-			'Username': 'username',
-			'PasswordDigest': '8p5hLaL4rzZOMdOIcX6VGscduxzAY8uNflY2I415S0Q',
-			'Nonce': 'YWJjZGVm',
-			'Created': '2016-09-01T00:00:00Z',
-			}
-		token = ', '.join('{}={}'.format(k, v) for k, v in token_params.items())
+		username = 'username'
+		password_digest = '8p5hLaL4rzZOMdOIcX6VGscduxzAY8uNflY2I415S0Q'
+		nonce = 'YWJjZGVm'
+		created = '2016-09-01T00:00:00Z'
 
-		self.assertEqual(utils._parse_token(token), token_params)
+		expected_values = (username, password_digest, nonce, created)
+		token = ('Username={}, PasswordDigest={}, Nonce={}, ' +
+			'Created={}').format(*expected_values)
+		
+		self.assertEqual(utils._parse_token(token), expected_values)
+
+
+	def test_parse_token_missing_param(self):
+		'''
+		Parse the components of a token when missing a parameter.
+		An exception should be raised.
+		'''
+		token = 'Username="username", Nonce="nonce"'
+
+		with self.assertRaises(exceptions.InvalidToken):
+			utils._parse_token(token)

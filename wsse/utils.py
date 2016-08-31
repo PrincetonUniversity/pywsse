@@ -11,6 +11,7 @@ import datetime
 import hashlib
 import base64
 import re
+import pydoc
 
 from six.moves import range
 import six
@@ -109,8 +110,10 @@ def _parse_token(token):
 	:param token: token to parse
 	:type token: str
 
-	:return: dict containing (Username, PasswordDigest, Nonce, Created)
-	:rtype: dict
+	:return: tuple of (Username, PasswordDigest, Nonce, Created)
+	:rtype: tuple
+
+	:raises ~.exceptions.InvalidToken: invalid token
 	'''
 	try:
 		key_values = {match.group('key'): match.group('value')
@@ -118,7 +121,19 @@ def _parse_token(token):
 	except (AttributeError, StopIteration):
 		key_values = {}
 
-	return key_values
+	missing_params = []
+	for param in ('Username', 'PasswordDigest', 'Nonce', 'Created'):
+		if param not in key_values:
+			missing_params.append(param)
+
+	if missing_params:
+		msg = 'Token {} missing parameters: {!r}'.format(token, missing_params)
+		logger.warning(msg)
+
+		raise exceptions.InvalidToken(msg)
+
+	return (key_values['Username'], key_values['PasswordDigest'],
+		key_values['Nonce'], key_values['Created'])
 
 def _generate_nonce(length = None, allowed_chars = None):
 	'''
