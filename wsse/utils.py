@@ -33,10 +33,10 @@ _TOKEN_RE = re.compile(
 _TS_OFFSET_RE = re.compile(
 	r'''
 		^
-		(?P<timestamp>.+)     # Main part of timestamp
-		(?P<direction>\+|\-)  # Offset direction (+ or -)
-		(?P<hour>\d{2})       # Hour offset (HH)
-		(?P<minute>\d{2})     # Minute offset (MM)
+		(?P<timestamp>.+)    # Main part of timestamp
+		(?P<direction>\+|\-) # Offset direction (+ or -)
+		(?P<hour>\d{2})      # Hour offset (HH)
+		(?P<minute>\d{2})    # Minute offset (MM)
 		$
 	''', re.VERBOSE)
 

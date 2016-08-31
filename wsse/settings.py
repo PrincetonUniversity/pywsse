@@ -16,11 +16,11 @@ TIMESTAMP_DURATION = 2 * 60 * 60
 # :note: The %z specifier is only supported on Python 3.2+. A custom parser is
 # used when the %z specifier fails.
 TIMESTAMP_FORMATS = [
-	'%Y-%m-%dT%H:%M:%SZ', # ISO 8601 in UTC (Z specifies 0 offset)
-	'%Y-%m-%dT%H:%M:%S', # ISO 8601 without timezone - assumed to be UTC
+	'%Y-%m-%dT%H:%M:%SZ',    # ISO 8601 in UTC (Z specifies 0 offset)
+	'%Y-%m-%dT%H:%M:%S',     # ISO 8601 without timezone - assumed to be UTC
 	'%Y-%m-%dT%H:%M:%S.%fZ', # ISO 8601 with microseconds in UTC
-	'%Y-%m-%dT%H:%M:%S.%f', # ISO 8601 with microseconds (assumed UTC)
-	'%Y-%m-%dT%H:%M:%S%z', # ISO 8601 with UTC offset
+	'%Y-%m-%dT%H:%M:%S.%f',  # ISO 8601 with microseconds (assumed UTC)
+	'%Y-%m-%dT%H:%M:%S%z',   # ISO 8601 with UTC offset
 	'%Y-%m-%dT%H:%M:%S.%f%z' # ISO 8601 with microseconds and UTC offset
 	]
 

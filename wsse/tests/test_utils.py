@@ -221,18 +221,18 @@ class TestTimestampParser(TestCase):
 	invalid_timestamps = [
 		'08/15/2016',
 		'08/16/2016 12:13:14',
-		'2016-08-31 13:14:15Z', # Missing T separator
-		'2016-08-31T13:14:15W' # Invalid TZ specifier (can only be Z)
+		'2016-08-31 13:14:15Z',       # Missing T separator
+		'2016-08-31T13:14:15W'        # Invalid TZ specifier (can only be Z)
 		'not_really_a_timestamp',
 		'2016-08-31T13:14:15 UTC',
 		'2016-08-31T13:14:15 EST',
-		'2014-06-18T07:14:54-03', # Missing MM (minutes) in offset
+		'2014-06-18T07:14:54-03',     # Missing MM (minutes) in offset
 		'2014-06-18T07:14:54-034525', # Second offsets not supported
 		'September 1st, 2016',
-		'2014-06-33T07:14:54-03', # June 33rd (or any 33rd) does not exist
-		'2014-06-18T24:14:54', # Hour must be less than or equal to 23
-		'2014-06-18T15:60:54', # Minute must be less than or equal to 59
-		'2014-06-18T15:58:60', # Second must be less than or equal to 59
+		'2014-06-33T07:14:54-03',     # June 33rd (or any 33rd) does not exist
+		'2014-06-18T24:14:54',        # Hour must be less than or equal to 23
+		'2014-06-18T15:60:54',        # Minute must be less than or equal to 59
+		'2014-06-18T15:58:60',        # Second must be less than or equal to 59
 		'Wed Aug 31 2016 16:37:47 GMT-0400 (EDT)',
 		]
 
