@@ -28,7 +28,7 @@ class TestSQLiteNonceStore(TestCase):
 		Tear down the tests after they are run.
 		'''
 		# Restores the database to a fresh state.
-		self.db_query('DELETE FROM nonce_store WHERE 1=1')
+		self.store._clear()
 
 	def db_query(self, query, *args, **kwargs):
 		'''
@@ -90,14 +90,13 @@ class TestSQLiteNonceStore(TestCase):
 		self.assertTrue(self.store.has_nonce('abc'))
 		self.assertFalse(self.store.has_nonce('def'))
 
-	def test_clean_expired_nonces(self):
+	def tear_clear(self):
 		'''
-		Add a nonce that is already expired. When cleaned, it should no longer
-		exist.
+		Clear the store. No entries should remain.
 		'''
 		now = datetime.datetime.utcnow()
 		self.db_query('INSERT INTO nonce_store (nonce, ts) VALUES (:nonce, :ts)',
-			('abc', now - datetime.timedelta(seconds = 121)))
+			('abc', now))
 		self.db_query('INSERT INTO nonce_store (nonce, ts) VALUES (:nonce, :ts)',
 			('def', now))
 
@@ -105,8 +104,34 @@ class TestSQLiteNonceStore(TestCase):
 		start_nonces = self.db_query('SELECT nonce FROM nonce_store WHERE 1=1',
 			many = True)
 
-		with mock.patch.object(settings, 'TIMESTAMP_DURATION', 120):
-			self.store.clean_expired_nonces()
+		self.store._clear()
+
+		end_count = self.db_query('SELECT COUNT(*) FROM nonce_store WHERE 1=1')
+		end_nonces = self.db_query('SELECT nonce FROM nonce_store WHERE 1=1',
+			many = True)
+
+		self.assertEqual(start_count[0], 2)
+		self.assertEqual(start_nonces, [('abc',), ('def',)])
+		self.assertEqual(end_count[0], 0)
+		self.assertEqual(end_nonces, [])
+
+	def test_clean_expired_nonces(self):
+		'''
+		Add a nonce that is already expired. When cleaned, it should no longer
+		exist.
+		'''
+		now = datetime.datetime.utcnow()
+		self.db_query('INSERT INTO nonce_store (nonce, ts) VALUES (:nonce, :ts)',
+			('abc', now - datetime.timedelta(
+				seconds = settings.TIMESTAMP_DURATION + 1)))
+		self.db_query('INSERT INTO nonce_store (nonce, ts) VALUES (:nonce, :ts)',
+			('def', now))
+
+		start_count = self.db_query('SELECT COUNT(*) FROM nonce_store WHERE 1=1')
+		start_nonces = self.db_query('SELECT nonce FROM nonce_store WHERE 1=1',
+			many = True)
+
+		self.store.clean_expired_nonces()
 
 		end_count = self.db_query('SELECT COUNT(*) FROM nonce_store WHERE 1=1')
 		end_nonces = self.db_query('SELECT nonce FROM nonce_store WHERE 1=1',
@@ -116,4 +141,3 @@ class TestSQLiteNonceStore(TestCase):
 		self.assertEqual(start_nonces, [('abc',), ('def',)])
 		self.assertEqual(end_count[0], 1)
 		self.assertEqual(end_nonces, [('def',)])
-

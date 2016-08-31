@@ -44,7 +44,7 @@ class SQLiteNonceStore(object):
 			self.db = None
 
 	@contextlib.contextmanager
-	def __transaction(self, force_new = False):
+	def __transaction(self):
 		'''Perform a transaction on the database.'''
 		cursor = self.db.cursor()
 		yield cursor
@@ -63,6 +63,14 @@ class SQLiteNonceStore(object):
 				{table}(nonce)'''.format(table = self.table_name))
 			cursor.execute('''CREATE INDEX IF NOT EXISTS idx_ts ON
 				{table}(ts)'''.format(table = self.table_name))
+
+	def _clear(self):
+		'''
+		Clear the nonce store.
+		'''
+		with self.__transaction() as cursor:
+			cursor.execute('DELETE FROM {table} WHERE 1=1'.format(
+				table = self.table_name))
 
 	def add_nonce(self, nonce, timestamp = None):
 		'''
