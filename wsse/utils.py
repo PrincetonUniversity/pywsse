@@ -67,7 +67,8 @@ class TokenBuilder(object):
 
 		return make_token(self.username, self.password, nonce, timestamp)
 
-def make_token(username, password, nonce, timestamp, algorithm = None):
+def make_token(username, password, nonce, timestamp, ts_format = None,
+	algorithm = None):
 	'''
 	Make a WSSE token using the provided fields.
 
@@ -83,7 +84,10 @@ def make_token(username, password, nonce, timestamp, algorithm = None):
 	:param timestamp: timestamp the token was generated at
 	:type timestamp: datetime.datetime
 
-	:param algorithm: algorithm to use for digest
+	:param ts_format: format for the timestamp (optional)
+	:type ts_format: str
+
+	:param algorithm: algorithm to use for digest (optional)
 	:type algorithm: str
 
 	:return: WSSE token
@@ -94,7 +98,9 @@ def make_token(username, password, nonce, timestamp, algorithm = None):
 		logger.warning('Timestamp in make_token expired: %s (%ds duration)',
 			timestamp, settings.TIMESTAMP_DURATION)
 
-	timestamp_str = timestamp.strftime(settings.TIMESTAMP_UTC_FORMAT)
+	if not ts_format:
+		ts_format = settings.TIMESTAMP_UTC_FORMAT
+	timestamp_str = timestamp.strftime(ts_format)
 
 	password_digest = _b64_digest(nonce, timestamp_str, password,
 		algorithm = algorithm)
@@ -125,8 +131,18 @@ def check_token(token, get_password = lambda username: username):
 	username, encoded_digest, encoded_nonce, created = _parse_token(token)
 
 	nonce = base64.b64decode(encoded_nonce)
-	timestamp = datetime.datetime.strptime(created,
-		settings.TIMESTAMP_UTC_FORMAT)
+	try:
+		timestamp = datetime.datetime.strptime(created,
+			settings.TIMESTAMP_UTC_FORMAT)
+	except ValueError:
+		try:
+			timestamp = datetime.datetime.strptime(created,
+				settings.TIMESTAMP_NAIVE_FORMAT)
+		except ValueError:
+			msg = 'Invalid timestamp {}, expected format of {}.'.format(created,
+				settings.TIMESTAMP_UTC_FORMAT)
+			logger.info(msg)
+			raise exceptions.InvalidTimestamp(msg)
 
 	if settings.SECURITY_CHECK_TIMESTAMP:
 		now = datetime.datetime.utcnow()

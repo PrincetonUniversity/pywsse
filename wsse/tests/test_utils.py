@@ -280,13 +280,37 @@ class TestTokens(TestCase):
 
 	def test_check_token(self):
 		'''
-		Check a token that is just generated.
+		Check a token that was just generated.
 		'''
 		now = datetime.datetime.utcnow()
 		nonce = utils._generate_nonce()
 		token = utils.make_token('username', 'secr3t', nonce, now)
 
 		self.assertTrue(utils.check_token(token, lambda x: 'secr3t'))
+
+	def test_check_token_alterntive_timestamp_format(self):
+		'''
+		Check a token that was just generated with a timestamp in a different
+		format.
+		'''
+		now = datetime.datetime.utcnow()
+		nonce = utils._generate_nonce()
+		token = utils.make_token('username', 'secr3t', nonce, now,
+			ts_format = settings.TIMESTAMP_NAIVE_FORMAT)
+
+		self.assertTrue(utils.check_token(token, lambda x: 'secr3t'))
+
+	def test_check_token_invalid_timestamp_format(self):
+		'''
+		Check a token that has a timestamp in an invalid format.
+		'''
+		ts = datetime.datetime.utcnow()
+		nonce = utils._generate_nonce()
+		token = utils.make_token('username', 'secr3t', nonce, ts,
+			ts_format = 'prefix-{}-suffix'.format(settings.TIMESTAMP_UTC_FORMAT))
+
+		with self.assertRaises(exceptions.InvalidTimestamp):
+			utils.check_token(token, lambda x: 'secr3t')
 
 	def test_check_token_expired_timestamp(self):
 		'''
