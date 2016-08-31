@@ -19,6 +19,10 @@ TIMESTAMP_NAIVE_FORMAT = '%Y-%m-%dT%H:%M:%S'
 # requires a database migration.
 NONCE_LENGTH = 64
 
+# Storage backend for the nonces.
+NONCE_STORE = 'wsse.server.default.store.SQLiteNonceStore'
+NONCE_STORE_PARAMS = (':memory:',)
+
 # Whether or not to check the nonce for validity.
 SECURITY_CHECK_NONCE = True
 

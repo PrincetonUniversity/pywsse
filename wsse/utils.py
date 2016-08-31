@@ -21,7 +21,7 @@ from . import exceptions
 
 logger = logging.getLogger(settings.LOGGER_NAME)
 
-TOKEN_RE = re.compile(
+_TOKEN_RE = re.compile(
 	r'''
 		(?P<key>\w+)\s*=\s* # Key consists of only alphanumerics
 		(?P<quote>["']?)    # Optional quote character.
@@ -31,6 +31,7 @@ TOKEN_RE = re.compile(
 	''',
 	re.VERBOSE
 )
+_STORES = {}
 
 class TokenBuilder(object):
 	'''
@@ -66,7 +67,7 @@ class TokenBuilder(object):
 
 		return make_token(self.username, self.password, nonce, timestamp)
 
-def make_token(username, password, nonce, timestamp):
+def make_token(username, password, nonce, timestamp, algorithm = None):
 	'''
 	Make a WSSE token using the provided fields.
 
@@ -81,15 +82,22 @@ def make_token(username, password, nonce, timestamp):
 
 	:param timestamp: timestamp the token was generated at
 	:type timestamp: datetime.datetime
+
+	:param algorithm: algorithm to use for digest
+	:type algorithm: str
+
+	:return: WSSE token
+	:rtype: str
 	'''
-	if timestamp < (datetime.datetime.utcnow() +
+	if timestamp < (datetime.datetime.utcnow() -
 		datetime.timedelta(seconds = settings.TIMESTAMP_DURATION)):
 		logger.warning('Timestamp in make_token expired: %s (%ds duration)',
 			timestamp, settings.TIMESTAMP_DURATION)
 
 	timestamp_str = timestamp.strftime(settings.TIMESTAMP_UTC_FORMAT)
 
-	password_digest = _b64_digest(nonce, timestamp_str, password)
+	password_digest = _b64_digest(nonce, timestamp_str, password,
+		algorithm = algorithm)
 	encoded_nonce = base64.b64encode(_to_bytes(nonce))
 
 	fields = (
@@ -100,6 +108,83 @@ def make_token(username, password, nonce, timestamp):
 		)
 
 	return ', '.join('{k}="{v}"'.format(k = k, v = v) for k, v in fields)
+
+def check_token(token, get_password = lambda username: username):
+	'''
+	Check if a token is valid.
+
+	:param token: token to check
+	:type token: str
+
+	:param get_password: function to get password given username
+	:type get_password: types.FunctionType
+
+	:return: whether or not the token is valid
+	:rtype: bool
+	'''
+	username, encoded_digest, encoded_nonce, created = _parse_token(token)
+
+	nonce = base64.b64decode(encoded_nonce)
+	timestamp = datetime.datetime.strptime(created,
+		settings.TIMESTAMP_UTC_FORMAT)
+
+	if settings.SECURITY_CHECK_TIMESTAMP:
+		now = datetime.datetime.utcnow()
+		expired_time = now - datetime.timedelta(
+			seconds = settings.TIMESTAMP_DURATION)
+
+		if (expired_time > timestamp or timestamp > now):
+			msg = 'The timestamp {} is expired or in the future.'.format(created)
+			logger.info(msg)
+			raise exceptions.InvalidTimestamp(msg)
+
+	if settings.SECURITY_CHECK_NONCE:
+		if len(nonce) != settings.NONCE_LENGTH:
+			msg = 'Nonce should be {} in length: {}.'.format(settings.NONCE_LENGTH,
+				nonce)
+			logger.info(msg)
+			raise exceptions.InvalidNonce(msg)
+
+		nonce_store = _get_nonce_store()
+
+		# Check if the nonce has already been used.
+		if nonce_store.has_nonce(nonce):
+			msg = 'The nonce {} has already been used.'.format(nonce)
+			logger.info(msg)
+			raise exceptions.InvalidNonce(msg)
+
+		nonce_store.add_nonce(nonce)
+
+	try:
+		password = get_password(username)
+	except Exception as e:
+		msg = 'Password for user {} not found with error {}.'.format(
+			username, e.msg)
+		logger.error(msg)
+		raise exceptions.UserException(msg)
+	else:
+		# For any of the allowed algorithms, check if the digest matches
+		# the expected digest.
+		for algorithm in settings.ALLOWED_DIGEST_ALGORITHMS:
+			valid_digest = _to_bytes(_b64_digest(nonce, created, password,
+				algorithm = algorithm.lower()))
+
+			if valid_digest == encoded_digest:
+				return True
+
+		# Check all of the prohibited algorithms - if the received digest matches
+		# that of a prohibited algorithm, then an error is raised saying that
+		# the algorithm is prohibited.
+		for algorithm in settings.PROHIBITED_DIGEST_ALGORITHMS:
+			valid_digest = _b64_digest(nonce, created, password,
+				algorithm = algorithm.lower())
+
+			if valid_digest == encoded_digest:
+				msg = 'Prohibited algorithm {} used for digest'.format(algorithm)
+				logger.info(msg)
+				raise exceptions.AlgorithmProhibited(msg)
+
+	return False
 
 ### Internal Methods
 
@@ -117,7 +202,7 @@ def _parse_token(token):
 	'''
 	try:
 		key_values = {match.group('key'): match.group('value')
-			for match in TOKEN_RE.finditer(token)}
+			for match in _TOKEN_RE.finditer(token)}
 	except (AttributeError, StopIteration):
 		key_values = {}
 
@@ -128,7 +213,7 @@ def _parse_token(token):
 
 	if missing_params:
 		msg = 'Token {} missing parameters: {!r}'.format(token, missing_params)
-		logger.warning(msg)
+		logger.info(msg)
 
 		raise exceptions.InvalidToken(msg)
 
@@ -162,7 +247,7 @@ def _generate_nonce(length = None, allowed_chars = None):
 	nonce = ''.join(random.choice(allowed_chars) for _ in range(length))
 	return nonce
 
-def _b64_digest(*args):
+def _b64_digest(*args, **kwargs):
 	'''
 	Perform a digest on the arguments using the specified algorithm in the
 	settings.
@@ -170,20 +255,27 @@ def _b64_digest(*args):
 	:param args: arguments to digest
 	:rtype args: `iter` of `str` or `bytes`
 	'''
-	digest_algorithm = _get_digest_algorithm()
+	algorithm = kwargs.get('algorithm')
+	digest_algorithm = _get_digest_algorithm(algorithm)
 	args_str = ''.join(map(_from_bytes, args))
 
 	return base64.b64encode(digest_algorithm(_to_bytes(args_str)).digest())
 
-def _get_digest_algorithm():
+def _get_digest_algorithm(name = None):
 	'''
 	Get the digest algorithm to use based on the settings.
+
+	:param name: name of algorithm to use
+	:type name: str
 
 	:return: digest algorithm
 	:rtype: class
 	'''
-	possible_algorithms = filter(lambda a: a in hashlib.algorithms_available,
-		(map(str.lower, settings.ALLOWED_DIGEST_ALGORITHMS)))
+	if name:
+		possible_algorithms = [name.lower()]
+	else:
+		possible_algorithms = filter(lambda a: a in hashlib.algorithms_available,
+			(map(str.lower, settings.ALLOWED_DIGEST_ALGORITHMS)))
 
 	for algo_name in possible_algorithms:
 		if hasattr(hashlib, algo_name):
@@ -192,6 +284,21 @@ def _get_digest_algorithm():
 	logger.error('No algorithm from %r found in hashlib %r',
 		settings.ALLOWED_DIGEST_ALGORITHMS, hashlib.algorithms_available)
 	raise exceptions.AlgorithmNotSupported('No suitable algorithm found.')
+
+def _get_nonce_store():
+	'''
+	Get the nonce store from the given setting.
+	'''
+	store_name = settings.NONCE_STORE
+
+	if store_name in _STORES:
+		return _STORES[store_name]
+
+	store = pydoc.locate(store_name)(*settings.NONCE_STORE_PARAMS)
+
+	_STORES[store_name] = store
+
+	return store
 
 def _to_bytes(s):
 	'''

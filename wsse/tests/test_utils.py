@@ -14,6 +14,7 @@ import mock
 import six
 
 from wsse import utils, settings, exceptions
+from wsse.server.default.store import SQLiteNonceStore
 
 class TestNonce(TestCase):
 	'''
@@ -48,6 +49,12 @@ class TestNonce(TestCase):
 
 		self.assertEqual(len(set(nonces)), len(nonces))
 
+	def test_get_nonce_store(self):
+		'''
+		Get the nonce store. It should be the default store.
+		'''
+		self.assertIsInstance(utils._get_nonce_store(), SQLiteNonceStore)
+
 class TestBytes_Strings(TestCase):
 	'''
 	Test automatic conversion of bytes to string and vice-versa.
@@ -78,8 +85,7 @@ class TestDigests(TestCase):
 		'''
 		self.assertEqual(utils._get_digest_algorithm(), hashlib.sha256)
 
-		with mock.patch.object(settings, 'ALLOWED_DIGEST_ALGORITHMS', ['SHA256']):
-			self.assertEqual(utils._get_digest_algorithm(), hashlib.sha256)
+		self.assertEqual(utils._get_digest_algorithm(), hashlib.sha256)
 
 		with mock.patch.object(settings, 'ALLOWED_DIGEST_ALGORITHMS',
 			['ABCDEF', 'SHA256']):
@@ -100,6 +106,17 @@ class TestDigests(TestCase):
 		with self.assertRaises(exceptions.AlgorithmNotSupported):
 			with mock.patch.object(settings, 'ALLOWED_DIGEST_ALGORITHMS', []):
 				utils._get_digest_algorithm()
+
+	def test_get_digest_algorithm_specified(self):
+		'''
+		Getting a specific digest algorithm should yield that algorithm if it
+		exists.
+		'''
+		self.assertEqual(utils._get_digest_algorithm('md5'), hashlib.md5)
+		self.assertEqual(utils._get_digest_algorithm('MD5'), hashlib.md5)
+
+		with self.assertRaises(exceptions.AlgorithmNotSupported):
+				utils._get_digest_algorithm('abcdef')
 
 	def test_b64_digest(self):
 		'''
@@ -142,6 +159,15 @@ class TestDigests(TestCase):
 
 			self.assertEqual(actual_digest, utils_digest)
 
+	def test_b64_digest_specified_algorithm(self):
+		'''
+		Perform a digest using a specified algorithm. The b64-encoded
+		digest should be returned.
+		'''
+		utils_digest = utils._b64_digest('a', 'b', 'c', algorithm = 'sha512')
+		actual_digest = base64.b64encode(hashlib.sha512(b'abc').digest())
+		self.assertEqual(actual_digest, utils_digest)
+
 class TestTokenBuilder(TestCase):
 	'''
 	Test building tokens with the builder.
@@ -183,6 +209,13 @@ class TestTokens(TestCase):
 	'''
 	Test making and validating tokens.
 	'''
+	def tearDown(self):
+		'''
+		Tear down the tests after they are run.
+		'''
+		store = utils._get_nonce_store()
+		store._clear()
+
 	def test_make_token(self):
 		'''
 		Make a token. It should match the proper parameters.
@@ -235,7 +268,6 @@ class TestTokens(TestCase):
 		
 		self.assertEqual(utils._parse_token(token), expected_values)
 
-
 	def test_parse_token_missing_param(self):
 		'''
 		Parse the components of a token when missing a parameter.
@@ -245,3 +277,151 @@ class TestTokens(TestCase):
 
 		with self.assertRaises(exceptions.InvalidToken):
 			utils._parse_token(token)
+
+	def test_check_token(self):
+		'''
+		Check a token that is just generated.
+		'''
+		now = datetime.datetime.utcnow()
+		nonce = utils._generate_nonce()
+		token = utils.make_token('username', 'secr3t', nonce, now)
+
+		self.assertTrue(utils.check_token(token, lambda x: 'secr3t'))
+
+	def test_check_token_expired_timestamp(self):
+		'''
+		Check a token that has an expired timestamp. An error should be raised.
+		'''
+		ts = (datetime.datetime.utcnow() -
+			datetime.timedelta(seconds = settings.TIMESTAMP_DURATION + 1))
+		nonce = utils._generate_nonce()
+		token = utils.make_token('username', 'secr3t', nonce, ts)
+
+		with self.assertRaises(exceptions.InvalidTimestamp):
+			utils.check_token(token, lambda x: 'secr3t')
+
+	def test_check_token_future_timestamp(self):
+		'''
+		Check a token that has a timestamp in the future. An error should be
+		raised.
+		'''
+		ts = datetime.datetime.utcnow() + datetime.timedelta(seconds = 100)
+		nonce = utils._generate_nonce()
+		token = utils.make_token('username', 'secr3t', nonce, ts)
+
+		with self.assertRaises(exceptions.InvalidTimestamp):
+			utils.check_token(token, lambda x: 'secr3t')
+
+	def test_check_token_invalid_timestamp_disabled_security(self):
+		'''
+		With disabled timestamp security, invalid timestamps should still
+		succeed.
+		'''
+		now = datetime.datetime.utcnow()
+		nonce = utils._generate_nonce()
+		past = now - datetime.timedelta(seconds = settings.TIMESTAMP_DURATION + 1)
+		past_token = utils.make_token('username', 'secr3t', nonce, past)
+
+		future = now + datetime.timedelta(seconds = 100)
+		nonce = utils._generate_nonce()
+		future_token = utils.make_token('username', 'secr3t', nonce, future)
+
+		with mock.patch.object(settings, 'SECURITY_CHECK_TIMESTAMP', False):
+			try:
+				self.assertTrue(utils.check_token(past_token, lambda x: 'secr3t'))
+			except exceptions.InvalidTimestamp:
+				self.fail('InvalidTimestamp raised with expired timestamp and ' +
+					'timestamp security disabled.')
+
+			try:
+				self.assertTrue(utils.check_token(future_token, lambda x: 'secr3t'))
+			except exceptions.InvalidTimestamp:
+				self.fail('InvalidTimestamp raised with expired timestamp and ' +
+					'timestamp security disabled.')
+
+	def test_check_token_short_nonce(self):
+		'''
+		Check a token with a short nonce - it should be rejected.
+		'''
+		now = datetime.datetime.utcnow()
+		nonce = utils._generate_nonce(length = settings.NONCE_LENGTH - 1)
+		token = utils.make_token('username', 'secr3t', nonce, now)
+
+		with self.assertRaises(exceptions.InvalidNonce):
+			utils.check_token(token, lambda x: 'secr3t')
+
+	def test_check_token_long_nonce(self):
+		'''
+		Check a token with a long nonce - it should be rejected.
+		'''
+		now = datetime.datetime.utcnow()
+		nonce = utils._generate_nonce() + 'a'
+		token = utils.make_token('username', 'secr3t', nonce, now)
+
+		with self.assertRaises(exceptions.InvalidNonce):
+			utils.check_token(token, lambda x: 'secr3t')
+
+	def test_check_token_replay_attack(self):
+		'''
+		Check a token twice - a replay attack should be detected.
+		'''
+		now = datetime.datetime.utcnow()
+		nonce = utils._generate_nonce()
+		token = utils.make_token('username', 'secr3t', nonce, now)
+
+		utils.check_token(token, lambda x: 'secr3t')
+		with self.assertRaises(exceptions.InvalidNonce):
+			utils.check_token(token, lambda x: 'secr3t')
+
+	def test_check_token_replay_attack_disabled_security(self):
+		'''
+		Check a token twice, but with nonce security disabled. A replay attack
+		should not be detected.
+		'''
+		now = datetime.datetime.utcnow()
+		nonce = utils._generate_nonce()
+		token = utils.make_token('username', 'secr3t', nonce, now)
+
+		with mock.patch.object(settings, 'SECURITY_CHECK_NONCE', False):
+			self.assertTrue(utils.check_token(token, lambda x: 'secr3t'))
+
+			try:
+				self.assertTrue(utils.check_token(token, lambda x: 'secr3t'))
+			except exceptions.InvalidNonce as e:
+				self.fail('InvalidNonce raised with nonce security disabled.')
+
+	def test_check_token_invalid_password(self):
+		'''
+		Check a valid token with an invalid password.
+		'''
+		now = datetime.datetime.utcnow()
+		nonce = utils._generate_nonce()
+		token = utils.make_token('username', 'wrong password', nonce, now)
+
+		self.assertFalse(utils.check_token(token, lambda x: 'secr3t'))
+
+	def test_check_token_alternative_algorithm(self):
+		'''
+		Check a valid token with an alternative algorithm.
+		'''
+		now = datetime.datetime.utcnow()
+		nonce = utils._generate_nonce()
+		token = utils.make_token('username', 'secr3t', nonce, now,
+			algorithm = 'sha512')
+
+		with mock.patch.object(settings, 'ALLOWED_DIGEST_ALGORITHMS',
+			['SHA256', 'SHA512']):
+			self.assertTrue(utils.check_token(token, lambda x: 'secr3t'))
+
+	def test_check_token_prohibited_algorithms(self):
+		'''
+		Check a valid token with prohibited algorithms. An error should be raised.
+		'''
+		for algorithm in settings.PROHIBITED_DIGEST_ALGORITHMS:
+			now = datetime.datetime.utcnow()
+			nonce = utils._generate_nonce()
+			token = utils.make_token('username', 'secr3t', nonce, now,
+				algorithm = algorithm.lower())
+
+			with self.assertRaises(exceptions.AlgorithmProhibited):
+				utils.check_token(token, lambda x: 'secr3t')
