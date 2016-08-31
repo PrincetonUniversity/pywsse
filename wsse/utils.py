@@ -28,9 +28,18 @@ _TOKEN_RE = re.compile(
 		(?P<value>.*?)      # Value is a non greedy match
 		(?P=quote)          # Closing quote equals the first.
 		($|,)               # Entry ends with comma or end of string
-	''',
-	re.VERBOSE
-)
+	''', re.VERBOSE)
+
+_TS_OFFSET_RE = re.compile(
+	r'''
+		^
+		(?P<timestamp>.+)     # Main part of timestamp
+		(?P<direction>\+|\-)  # Offset direction (+ or -)
+		(?P<hour>\d{2})       # Hour offset (HH)
+		(?P<minute>\d{2})     # Minute offset (MM)
+		$
+	''', re.VERBOSE)
+
 _STORES = {}
 
 class TokenBuilder(object):
@@ -99,7 +108,7 @@ def make_token(username, password, nonce, timestamp, ts_format = None,
 			timestamp, settings.TIMESTAMP_DURATION)
 
 	if not ts_format:
-		ts_format = settings.TIMESTAMP_UTC_FORMAT
+		ts_format = settings.TIMESTAMP_FORMATS[0]
 	timestamp_str = timestamp.strftime(ts_format)
 
 	password_digest = _b64_digest(nonce, timestamp_str, password,
@@ -127,22 +136,19 @@ def check_token(token, get_password = lambda username: username):
 
 	:return: whether or not the token is valid
 	:rtype: bool
+
+	:raises exceptions.InvalidTimestamp: timestamp is in invalid format or
+		expired/in future
+	:raises exceptions.InvalidNonce: nonce is not proper length or already used
+	:raises exceptions.InvalidToken: token is not in proper format
+	:raises exceptions.UserException: user's password not found
+	:raises exceptions.AlgorithmProhibited: digest algorithm is explicitly
+		prohibited
 	'''
 	username, encoded_digest, encoded_nonce, created = _parse_token(token)
 
 	nonce = base64.b64decode(encoded_nonce)
-	try:
-		timestamp = datetime.datetime.strptime(created,
-			settings.TIMESTAMP_UTC_FORMAT)
-	except ValueError:
-		try:
-			timestamp = datetime.datetime.strptime(created,
-				settings.TIMESTAMP_NAIVE_FORMAT)
-		except ValueError:
-			msg = 'Invalid timestamp {}, expected format of {}.'.format(created,
-				settings.TIMESTAMP_UTC_FORMAT)
-			logger.info(msg)
-			raise exceptions.InvalidTimestamp(msg)
+	timestamp = _parse_timestamp(created)
 
 	if settings.SECURITY_CHECK_TIMESTAMP:
 		now = datetime.datetime.utcnow()
@@ -235,6 +241,50 @@ def _parse_token(token):
 
 	return (key_values['Username'], key_values['PasswordDigest'],
 		key_values['Nonce'], key_values['Created'])
+
+def _parse_timestamp(timestamp):
+	'''
+	Parse a timestamp. Attempts the formats specified in the settings in the
+	order given.
+
+	:param timestamp: timestamp to parse
+	:rtype timestamp: str
+
+	:return: parsed timestamp
+	:rtype: datetime.datetime
+
+	:raises exceptions.InvalidTimestamp: invalid timestamp format
+	'''
+	for fmt in settings.TIMESTAMP_FORMATS:
+		try:
+			return datetime.datetime.strptime(timestamp, fmt)
+		except ValueError:
+			# If the format ends with a '%z', it expects a UTC offset. However,
+			# Python versions under 3.2 do not support the %z format. So, the offset
+			# is parsed manually and the rest of the timestamp is passed on to the
+			# original strptime parser.
+			if fmt.endswith('%z'):
+				match = _TS_OFFSET_RE.match(timestamp)
+				if not match: continue
+
+				try:
+					# Parse the base part of the string and the offset (with direction).
+					base = datetime.datetime.strptime(match.group('timestamp'), fmt[:-2])
+					direction = -1 if match.group('direction') == '-' else 1
+					offset = datetime.timedelta(hours = int(match.group('hour')),
+						minutes = int(match.group('minute')))
+
+					return base + (direction * offset)
+
+				except (ValueError, IndexError):
+					continue
+
+			else: continue
+		
+	msg = 'Invalid timestamp {}, expected one of {!r}.'.format(timestamp,
+		settings.TIMESTAMP_FORMATS)
+	logger.info(msg)
+	raise exceptions.InvalidTimestamp(msg)
 
 def _generate_nonce(length = None, allowed_chars = None):
 	'''

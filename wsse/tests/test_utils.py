@@ -168,6 +168,93 @@ class TestDigests(TestCase):
 		actual_digest = base64.b64encode(hashlib.sha512(b'abc').digest())
 		self.assertEqual(actual_digest, utils_digest)
 
+class TestTimestampParser(TestCase):
+	'''
+	Test parsing of timestamps.
+	'''
+	expected_values = {
+		# ISO 8601 with UTC specifier
+		'2016-08-31T13:14:15Z': datetime.datetime(year = 2016, month = 8, day = 31,
+				hour = 13, minute = 14, second = 15),
+
+		# ISO 8601 without UTC specifier
+		'2016-08-31T13:14:15': datetime.datetime(year = 2016, month = 8, day = 31,
+				hour = 13, minute = 14, second = 15),
+
+		# ISO 8601 with microseconds and UTC specifier
+		'2015-07-21T01:23:53.123456Z': datetime.datetime(year = 2015, month = 7,
+			day = 21, hour = 1, minute = 23, second = 53, microsecond = 123456),
+		'2015-07-21T01:23:53.123Z': datetime.datetime(year = 2015, month = 7,
+			day = 21, hour = 1, minute = 23, second = 53, microsecond = 123000),
+		'2015-07-21T01:23:53.000123Z': datetime.datetime(year = 2015, month = 7,
+			day = 21, hour = 1, minute = 23, second = 53, microsecond = 123),
+
+		# ISO 8601 with microseconds without UTC specifier
+		'2015-07-21T01:23:53.123456': datetime.datetime(year = 2015, month = 7,
+			day = 21, hour = 1, minute = 23, second = 53, microsecond = 123456),
+		'2015-07-21T01:23:53.123': datetime.datetime(year = 2015, month = 7,
+			day = 21, hour = 1, minute = 23, second = 53, microsecond = 123000),
+		'2015-07-21T01:23:53.000123': datetime.datetime(year = 2015, month = 7,
+			day = 21, hour = 1, minute = 23, second = 53, microsecond = 123),
+
+		# ISO 8601 with UTC offset
+		'2014-06-18T07:14:54+0400': datetime.datetime(year = 2014, month = 6,
+			day = 18, hour = 11, minute = 14, second = 54),
+		'2014-06-18T07:14:54+0015': datetime.datetime(year = 2014, month = 6,
+			day = 18, hour = 7, minute = 29, second = 54),
+		'2014-06-18T07:14:54+0415': datetime.datetime(year = 2014, month = 6,
+			day = 18, hour = 11, minute = 29, second = 54),
+		'2014-06-18T07:14:54-0300': datetime.datetime(year = 2014, month = 6,
+			day = 18, hour = 4, minute = 14, second = 54),
+		'2014-06-18T07:14:54-0045': datetime.datetime(year = 2014, month = 6,
+			day = 18, hour = 6, minute = 29, second = 54),
+		'2014-06-18T07:14:54-0345': datetime.datetime(year = 2014, month = 6,
+			day = 18, hour = 3, minute = 29, second = 54),
+
+		# ISO 8601 with microseconds UTC offset
+		'2014-06-18T07:14:54.123+0415': datetime.datetime(year = 2014, month = 6,
+			day = 18, hour = 11, minute = 29, second = 54, microsecond = 123000),
+		'2014-06-18T07:14:54.456-0345': datetime.datetime(year = 2014, month = 6,
+			day = 18, hour = 3, minute = 29, second = 54, microsecond = 456000),
+		}
+
+	invalid_timestamps = [
+		'08/15/2016',
+		'08/16/2016 12:13:14',
+		'2016-08-31 13:14:15Z', # Missing T separator
+		'2016-08-31T13:14:15W' # Invalid TZ specifier (can only be Z)
+		'not_really_a_timestamp',
+		'2016-08-31T13:14:15 UTC',
+		'2016-08-31T13:14:15 EST',
+		'2014-06-18T07:14:54-03', # Missing MM (minutes) in offset
+		'2014-06-18T07:14:54-034525', # Second offsets not supported
+		'September 1st, 2016',
+		'2014-06-33T07:14:54-03', # June 33rd (or any 33rd) does not exist
+		'2014-06-18T24:14:54', # Hour must be less than or equal to 23
+		'2014-06-18T15:60:54', # Minute must be less than or equal to 59
+		'2014-06-18T15:58:60', # Second must be less than or equal to 59
+		'Wed Aug 31 2016 16:37:47 GMT-0400 (EDT)',
+		]
+
+	def test_parse_timestamp(self):
+		'''
+		Parse a valid timestamp in various formats. Valid datetime objects should
+		be returned.
+		'''
+		for timestamp, expected in self.expected_values.items():
+			received = utils._parse_timestamp(timestamp)
+			msg = '({}) {!r} != {!r}'.format(timestamp, received, expected)
+			self.assertEqual(received, expected, msg)
+
+	def test_parse_timestampinvalid(self):
+		'''
+		Parse invalid timestamps, including unsupported formats. Parsing should
+		fail.
+		'''
+		for invalid_ts in self.invalid_timestamps:
+			with self.assertRaises(exceptions.InvalidTimestamp):
+				utils._parse_timestamp(invalid_ts)
+
 class TestTokenBuilder(TestCase):
 	'''
 	Test building tokens with the builder.
@@ -293,12 +380,13 @@ class TestTokens(TestCase):
 		Check a token that was just generated with a timestamp in a different
 		format.
 		'''
-		now = datetime.datetime.utcnow()
-		nonce = utils._generate_nonce()
-		token = utils.make_token('username', 'secr3t', nonce, now,
-			ts_format = settings.TIMESTAMP_NAIVE_FORMAT)
+		for fmt in settings.TIMESTAMP_FORMATS[1:]:
+			now = datetime.datetime.utcnow()
+			nonce = utils._generate_nonce()
+			token = utils.make_token('username', 'secr3t', nonce, now,
+				ts_format = fmt)
 
-		self.assertTrue(utils.check_token(token, lambda x: 'secr3t'))
+			self.assertTrue(utils.check_token(token, lambda x: 'secr3t'))
 
 	def test_check_token_invalid_timestamp_format(self):
 		'''
@@ -307,7 +395,7 @@ class TestTokens(TestCase):
 		ts = datetime.datetime.utcnow()
 		nonce = utils._generate_nonce()
 		token = utils.make_token('username', 'secr3t', nonce, ts,
-			ts_format = 'prefix-{}-suffix'.format(settings.TIMESTAMP_UTC_FORMAT))
+			ts_format = 'prefix-{}-suffix'.format(settings.TIMESTAMP_FORMATS[0]))
 
 		with self.assertRaises(exceptions.InvalidTimestamp):
 			utils.check_token(token, lambda x: 'secr3t')

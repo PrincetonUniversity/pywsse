@@ -9,10 +9,20 @@
 # After that duration, the timestamp will no longer allow authentication.
 TIMESTAMP_DURATION = 2 * 60 * 60
 
-# Timestamp formats. The UTC format is timezone-aware, whereas the naive format
-# ignores timezones.
-TIMESTAMP_UTC_FORMAT = '%Y-%m-%dT%H:%M:%SZ'
-TIMESTAMP_NAIVE_FORMAT = '%Y-%m-%dT%H:%M:%S'
+# Timestamp formats. All timestamps are converted to UTC once parsed. If the
+# timestamp is naive (i.e does not specify UTC or offset from UTC), it is
+# assumed to be UTC.
+#
+# :note: The %z specifier is only supported on Python 3.2+. A custom parser is
+# used when the %z specifier fails.
+TIMESTAMP_FORMATS = [
+	'%Y-%m-%dT%H:%M:%SZ', # ISO 8601 in UTC (Z specifies 0 offset)
+	'%Y-%m-%dT%H:%M:%S', # ISO 8601 without timezone - assumed to be UTC
+	'%Y-%m-%dT%H:%M:%S.%fZ', # ISO 8601 with microseconds in UTC
+	'%Y-%m-%dT%H:%M:%S.%f', # ISO 8601 with microseconds (assumed UTC)
+	'%Y-%m-%dT%H:%M:%S%z', # ISO 8601 with UTC offset
+	'%Y-%m-%dT%H:%M:%S.%f%z' # ISO 8601 with microseconds and UTC offset
+	]
 
 # (Maximum) length of the nonce.
 # :note: If using a database to store the used nonces, changing this value
