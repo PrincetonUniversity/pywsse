@@ -514,6 +514,19 @@ class TestTokens(TestCase):
 
 		self.assertIsNone(utils.check_token(token, lambda x: 'secr3t'))
 
+	def test_check_token_nonexistent_user(self):
+		'''
+		Check a valid token but with a user does not exist. An error should be
+		raised.
+		'''
+		users = {'username': None}
+		now = datetime.datetime.utcnow()
+		nonce = utils._random_string()
+		token = utils.make_token('user', 'secr3t', nonce, now)
+
+		with self.assertRaises(exceptions.UserException):
+			utils.check_token(token, lambda x: users[x])
+
 	def test_check_token_alternative_algorithm(self):
 		'''
 		Check a valid token with an alternative algorithm.
