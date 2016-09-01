@@ -328,7 +328,7 @@ class TestTokens(TestCase):
 		Parse the components of a token. The resulting dictionary should contain
 		the token's parameters.
 		'''
-		username = 'username'
+		username = 'user'
 		password_digest = '8p5hLaL4rzZOMdOIcX6VGscduxzAY8uNflY2I415S0Q'
 		nonce = 'YWJjZGVm'
 		created = '2016-09-01T00:00:00Z'
@@ -344,7 +344,7 @@ class TestTokens(TestCase):
 		Parse the components of a token without quotes surrounding the values.
 		The resulting dictionary should contain the token's parameters.
 		'''
-		username = 'username'
+		username = 'user'
 		password_digest = '8p5hLaL4rzZOMdOIcX6VGscduxzAY8uNflY2I415S0Q'
 		nonce = 'YWJjZGVm'
 		created = '2016-09-01T00:00:00Z'
@@ -371,9 +371,9 @@ class TestTokens(TestCase):
 		'''
 		now = datetime.datetime.utcnow()
 		nonce = utils._generate_nonce()
-		token = utils.make_token('username', 'secr3t', nonce, now)
+		token = utils.make_token('user', 'secr3t', nonce, now)
 
-		self.assertTrue(utils.check_token(token, lambda x: 'secr3t'))
+		self.assertEqual(utils.check_token(token, lambda x: 'secr3t'), 'user')
 
 	def test_check_token_alterntive_timestamp_format(self):
 		'''
@@ -383,10 +383,10 @@ class TestTokens(TestCase):
 		for fmt in settings.TIMESTAMP_FORMATS[1:]:
 			now = datetime.datetime.utcnow()
 			nonce = utils._generate_nonce()
-			token = utils.make_token('username', 'secr3t', nonce, now,
+			token = utils.make_token('user', 'secr3t', nonce, now,
 				ts_format = fmt)
 
-			self.assertTrue(utils.check_token(token, lambda x: 'secr3t'))
+			self.assertEqual(utils.check_token(token, lambda x: 'secr3t'), 'user')
 
 	def test_check_token_invalid_timestamp_format(self):
 		'''
@@ -394,7 +394,7 @@ class TestTokens(TestCase):
 		'''
 		ts = datetime.datetime.utcnow()
 		nonce = utils._generate_nonce()
-		token = utils.make_token('username', 'secr3t', nonce, ts,
+		token = utils.make_token('user', 'secr3t', nonce, ts,
 			ts_format = 'prefix-{}-suffix'.format(settings.TIMESTAMP_FORMATS[0]))
 
 		with self.assertRaises(exceptions.InvalidTimestamp):
@@ -407,7 +407,7 @@ class TestTokens(TestCase):
 		ts = (datetime.datetime.utcnow() -
 			datetime.timedelta(seconds = settings.TIMESTAMP_DURATION + 1))
 		nonce = utils._generate_nonce()
-		token = utils.make_token('username', 'secr3t', nonce, ts)
+		token = utils.make_token('user', 'secr3t', nonce, ts)
 
 		with self.assertRaises(exceptions.InvalidTimestamp):
 			utils.check_token(token, lambda x: 'secr3t')
@@ -419,7 +419,7 @@ class TestTokens(TestCase):
 		'''
 		ts = datetime.datetime.utcnow() + datetime.timedelta(seconds = 100)
 		nonce = utils._generate_nonce()
-		token = utils.make_token('username', 'secr3t', nonce, ts)
+		token = utils.make_token('user', 'secr3t', nonce, ts)
 
 		with self.assertRaises(exceptions.InvalidTimestamp):
 			utils.check_token(token, lambda x: 'secr3t')
@@ -432,21 +432,23 @@ class TestTokens(TestCase):
 		now = datetime.datetime.utcnow()
 		nonce = utils._generate_nonce()
 		past = now - datetime.timedelta(seconds = settings.TIMESTAMP_DURATION + 1)
-		past_token = utils.make_token('username', 'secr3t', nonce, past)
+		past_token = utils.make_token('user', 'secr3t', nonce, past)
 
 		future = now + datetime.timedelta(seconds = 100)
 		nonce = utils._generate_nonce()
-		future_token = utils.make_token('username', 'secr3t', nonce, future)
+		future_token = utils.make_token('user', 'secr3t', nonce, future)
 
 		with mock.patch.object(settings, 'SECURITY_CHECK_TIMESTAMP', False):
 			try:
-				self.assertTrue(utils.check_token(past_token, lambda x: 'secr3t'))
+				self.assertEqual(utils.check_token(past_token, lambda x: 'secr3t'),
+					'user')
 			except exceptions.InvalidTimestamp:
 				self.fail('InvalidTimestamp raised with expired timestamp and ' +
 					'timestamp security disabled.')
 
 			try:
-				self.assertTrue(utils.check_token(future_token, lambda x: 'secr3t'))
+				self.assertEqual(utils.check_token(future_token, lambda x: 'secr3t'),
+					'user')
 			except exceptions.InvalidTimestamp:
 				self.fail('InvalidTimestamp raised with expired timestamp and ' +
 					'timestamp security disabled.')
@@ -457,7 +459,7 @@ class TestTokens(TestCase):
 		'''
 		now = datetime.datetime.utcnow()
 		nonce = utils._generate_nonce(length = settings.NONCE_LENGTH - 1)
-		token = utils.make_token('username', 'secr3t', nonce, now)
+		token = utils.make_token('user', 'secr3t', nonce, now)
 
 		with self.assertRaises(exceptions.InvalidNonce):
 			utils.check_token(token, lambda x: 'secr3t')
@@ -468,7 +470,7 @@ class TestTokens(TestCase):
 		'''
 		now = datetime.datetime.utcnow()
 		nonce = utils._generate_nonce() + 'a'
-		token = utils.make_token('username', 'secr3t', nonce, now)
+		token = utils.make_token('user', 'secr3t', nonce, now)
 
 		with self.assertRaises(exceptions.InvalidNonce):
 			utils.check_token(token, lambda x: 'secr3t')
@@ -479,7 +481,7 @@ class TestTokens(TestCase):
 		'''
 		now = datetime.datetime.utcnow()
 		nonce = utils._generate_nonce()
-		token = utils.make_token('username', 'secr3t', nonce, now)
+		token = utils.make_token('user', 'secr3t', nonce, now)
 
 		utils.check_token(token, lambda x: 'secr3t')
 		with self.assertRaises(exceptions.InvalidNonce):
@@ -492,14 +494,14 @@ class TestTokens(TestCase):
 		'''
 		now = datetime.datetime.utcnow()
 		nonce = utils._generate_nonce()
-		token = utils.make_token('username', 'secr3t', nonce, now)
+		token = utils.make_token('user', 'secr3t', nonce, now)
 
 		with mock.patch.object(settings, 'SECURITY_CHECK_NONCE', False):
-			self.assertTrue(utils.check_token(token, lambda x: 'secr3t'))
+			self.assertEqual(utils.check_token(token, lambda x: 'secr3t'), 'user')
 
 			try:
-				self.assertTrue(utils.check_token(token, lambda x: 'secr3t'))
-			except exceptions.InvalidNonce as e:
+				self.assertEqual(utils.check_token(token, lambda x: 'secr3t'), 'user')
+			except exceptions.InvalidNonce:
 				self.fail('InvalidNonce raised with nonce security disabled.')
 
 	def test_check_token_invalid_password(self):
@@ -508,9 +510,9 @@ class TestTokens(TestCase):
 		'''
 		now = datetime.datetime.utcnow()
 		nonce = utils._generate_nonce()
-		token = utils.make_token('username', 'wrong password', nonce, now)
+		token = utils.make_token('user', 'wrong password', nonce, now)
 
-		self.assertFalse(utils.check_token(token, lambda x: 'secr3t'))
+		self.assertIsNone(utils.check_token(token, lambda x: 'secr3t'))
 
 	def test_check_token_alternative_algorithm(self):
 		'''
@@ -518,12 +520,12 @@ class TestTokens(TestCase):
 		'''
 		now = datetime.datetime.utcnow()
 		nonce = utils._generate_nonce()
-		token = utils.make_token('username', 'secr3t', nonce, now,
+		token = utils.make_token('user', 'secr3t', nonce, now,
 			algorithm = 'sha512')
 
 		with mock.patch.object(settings, 'ALLOWED_DIGEST_ALGORITHMS',
 			['SHA256', 'SHA512']):
-			self.assertTrue(utils.check_token(token, lambda x: 'secr3t'))
+			self.assertEqual(utils.check_token(token, lambda x: 'secr3t'), 'user')
 
 	def test_check_token_prohibited_algorithms(self):
 		'''
@@ -532,7 +534,7 @@ class TestTokens(TestCase):
 		for algorithm in settings.PROHIBITED_DIGEST_ALGORITHMS:
 			now = datetime.datetime.utcnow()
 			nonce = utils._generate_nonce()
-			token = utils.make_token('username', 'secr3t', nonce, now,
+			token = utils.make_token('user', 'secr3t', nonce, now,
 				algorithm = algorithm.lower())
 
 			with self.assertRaises(exceptions.AlgorithmProhibited):

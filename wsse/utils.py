@@ -134,8 +134,8 @@ def check_token(token, get_password = lambda username: username):
 	:param get_password: function to get password given username
 	:type get_password: types.FunctionType
 
-	:return: whether or not the token is valid
-	:rtype: bool
+	:return: username if check passes or None otherwise
+	:rtype: str
 
 	:raises exceptions.InvalidTimestamp: timestamp is in invalid format or
 		expired/in future
@@ -192,7 +192,7 @@ def check_token(token, get_password = lambda username: username):
 				algorithm = algorithm.lower()))
 
 			if valid_digest == encoded_digest:
-				return True
+				return username
 
 		# Check all of the prohibited algorithms - if the received digest matches
 		# that of a prohibited algorithm, then an error is raised saying that
@@ -206,7 +206,7 @@ def check_token(token, get_password = lambda username: username):
 				logger.info(msg)
 				raise exceptions.AlgorithmProhibited(msg)
 
-	return False
+	return None
 
 ### Internal Methods
 
