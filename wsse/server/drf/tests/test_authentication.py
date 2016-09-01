@@ -12,7 +12,7 @@ import itertools
 
 from rest_framework.test import APITestCase, APIRequestFactory
 from rest_framework import status
-from django.core.urlresolvers import reverse
+from django.core.urlresolvers import reverse_lazy
 from django.contrib.auth.models import User
 
 from wsse import utils, settings
@@ -23,6 +23,7 @@ class WSSEAuthenticationTests(APITestCase):
 	Test WSSE Authentication on the API.
 	'''
 	factory = APIRequestFactory()
+	base_url = reverse_lazy('api-test')
 
 	@contextlib.contextmanager
 	def http_auth(self, header):
@@ -44,8 +45,6 @@ class WSSEAuthenticationTests(APITestCase):
 		'''
 		cls.user = User.objects.create(username = 'test')
 		cls.user_secret = UserSecret.objects.create(user = cls.user)
-
-		cls.base_url = reverse('api-test')
 
 	@classmethod
 	def tearDownClass(cls):
