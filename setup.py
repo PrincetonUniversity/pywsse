@@ -1,6 +1,6 @@
 # setup.py
 # py-wsse
-# Author: Rushy Panchal
+# Authors: Rushy Panchal, Naphat Sanguansin, Adam Libresco, Jérémie Lumbroso
 # Date: August 31st, 2016
 # Description: Setuptools configuration.
 

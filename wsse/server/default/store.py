@@ -1,6 +1,6 @@
 # wsse/server/default/store.py
 # py-wsse
-# Author: Rushy Panchal
+# Authors: Rushy Panchal, Naphat Sanguansin, Adam Libresco, Jérémie Lumbroso
 # Date: August 30th, 2016
 # Description: Store implementation for default server.
 

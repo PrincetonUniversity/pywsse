@@ -1,6 +1,6 @@
 # wsse/tests/test_utils.py
 # py-wsse
-# Author: Rushy Panchal
+# Authors: Rushy Panchal, Naphat Sanguansin, Adam Libresco, Jérémie Lumbroso
 # Date: August 30th, 2016
 # Description: Test utility functions.
 

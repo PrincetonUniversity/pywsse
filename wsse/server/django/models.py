@@ -1,6 +1,6 @@
 # wsse/server/django/models.py
 # py-wsse
-# Author: Rushy Panchal
+# Authors: Rushy Panchal, Naphat Sanguansin, Adam Libresco, Jérémie Lumbroso
 # Date: September 1st, 2016
 # Description: Database models for storing the nonces and user secrets.
 

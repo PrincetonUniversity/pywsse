@@ -1,6 +1,6 @@
 # wsse/tests/settings.py
 # py-wsse
-# Author: Rushy Panchal
+# Authors: Rushy Panchal, Naphat Sanguansin, Adam Libresco, Jérémie Lumbroso
 # Date: September 1st, 2016
 # Description: Test application settings.
 
