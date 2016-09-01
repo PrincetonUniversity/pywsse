@@ -29,7 +29,6 @@ INSTALLED_APPS = (
 
 	# Server-side applications
 	'wsse.server.django',
-
 	'wsse.server.drf',
 	)
 

@@ -160,8 +160,9 @@ def check_token(token, get_password = lambda username: username):
 		now = datetime.datetime.utcnow()
 		expired_time = now - datetime.timedelta(
 			seconds = settings.TIMESTAMP_DURATION)
+		future_time = now + datetime.timedelta(seconds = settings.DRIFT_OFFSET)
 
-		if (expired_time > timestamp or timestamp > now):
+		if (expired_time > timestamp or timestamp > future_time):
 			msg = 'The timestamp {} is expired or in the future.'.format(created)
 			logger.info(msg)
 			raise exceptions.InvalidTimestamp(msg)

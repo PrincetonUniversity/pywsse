@@ -168,6 +168,20 @@ class WSSEAuthenticationTests(APITestCase):
 
 			self.assertEqual(response.status_code, status.HTTP_200_OK)
 
+	def test_valid_authentication_drift(self):
+		'''
+		Authenticate with a valid username with drift on the timestamp.
+		The authentication should succeed.
+		'''
+		ts = (datetime.datetime.utcnow() +
+			datetime.timedelta(seconds = settings.DRIFT_OFFSET - 1))
+		timestamp = ts.strftime('%Y-%m-%dT%H:%M:%S.%fZ')
+
+		with self.http_auth(self.make_header()):
+			response = self.client.get(self.base_url)
+
+		self.assertEqual(response.status_code, status.HTTP_200_OK)
+
 	def test_no_authentication(self):
 		'''
 		Perform a request with no attempt at authentication. Authentication

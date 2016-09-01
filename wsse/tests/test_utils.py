@@ -400,6 +400,31 @@ class TestTokens(TestCase):
 		with self.assertRaises(exceptions.InvalidTimestamp):
 			utils.check_token(token, lambda x: 'secr3t')
 
+	def test_check_token_drift(self):
+		'''
+		Check a token that has a timestamp with drift. The user should still be
+		authenticated.
+		'''
+		ts = (datetime.datetime.utcnow() +
+			datetime.timedelta(seconds = settings.DRIFT_OFFSET - 1))
+		nonce = utils._random_string()
+		token = utils.make_token('user', 'secr3t', nonce, ts)
+
+		self.assertEqual(utils.check_token(token, lambda x: 'secr3t'), 'user')
+
+	def test_check_token_drift_excessive(self):
+		'''
+		Check a token that has a timestamp with excessive drift.
+		An error should be raised.
+		'''
+		ts = (datetime.datetime.utcnow() +
+			datetime.timedelta(seconds = settings.DRIFT_OFFSET + 1))
+		nonce = utils._random_string()
+		token = utils.make_token('user', 'secr3t', nonce, ts)
+
+		with self.assertRaises(exceptions.InvalidTimestamp):
+			utils.check_token(token, lambda x: 'secr3t')
+
 	def test_check_token_expired_timestamp(self):
 		'''
 		Check a token that has an expired timestamp. An error should be raised.
