@@ -32,6 +32,10 @@ setup(
 		'Operating System :: OS Independent',
 		'License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)',
 		],
-	tests_require = ['nose', 'mock'],
+	tests_require = [
+		'nose',
+		'mock>=2.0.0',
+		'django>=1.9',
+		'djangorestframework>=3.4.6'],
 	test_suite = 'nose.collector',
 )

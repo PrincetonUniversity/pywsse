@@ -33,6 +33,9 @@ NONCE_LENGTH = 64
 NONCE_STORE = 'wsse.server.default.store.SQLiteNonceStore'
 NONCE_STORE_PARAMS = (':memory:',)
 
+# Name for the request header.
+REQUEST_HEADER = 'HTTP_X_WSSE'
+
 # Whether or not to check the nonce for validity.
 SECURITY_CHECK_NONCE = True
 
@@ -44,6 +47,10 @@ ALLOWED_DIGEST_ALGORITHMS = ['SHA256']
 
 # List of digest algorithms that are prohibited.
 PROHIBITED_DIGEST_ALGORITHMS = ['SHA1', 'MD5']
+
+# (Maximum) length of the secret key. This is only enforced when the secrets
+# are stored in the database. When changed, a database migration is required.
+SECRET_KEY_LENGTH = 64
 
 # Root logger name.
 LOGGER_NAME = 'wsse'

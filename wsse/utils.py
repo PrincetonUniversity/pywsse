@@ -147,7 +147,13 @@ def check_token(token, get_password = lambda username: username):
 	'''
 	username, encoded_digest, encoded_nonce, created = _parse_token(token)
 
-	nonce = base64.b64decode(encoded_nonce)
+	try:
+		nonce = base64.b64decode(encoded_nonce)
+	except (TypeError, ValueError):
+		msg = 'Nonce should be properly base64 encoded: {}'.format(encoded_nonce)
+		logger.info(msg)
+		raise exceptions.InvalidNonce(msg)
+
 	timestamp = _parse_timestamp(created)
 
 	if settings.SECURITY_CHECK_TIMESTAMP:
@@ -162,8 +168,8 @@ def check_token(token, get_password = lambda username: username):
 
 	if settings.SECURITY_CHECK_NONCE:
 		if len(nonce) != settings.NONCE_LENGTH:
-			msg = 'Nonce should be {} in length: {}.'.format(settings.NONCE_LENGTH,
-				nonce)
+			msg = 'Nonce should be {} in length, not {}.'.format(
+				settings.NONCE_LENGTH, len(nonce))
 			logger.info(msg)
 			raise exceptions.InvalidNonce(msg)
 
@@ -192,7 +198,7 @@ def check_token(token, get_password = lambda username: username):
 
 			if valid_digest == encoded_digest:
 				return username
-
+ 
 		# Check all of the prohibited algorithms - if the received digest matches
 		# that of a prohibited algorithm, then an error is raised saying that
 		# the algorithm is prohibited.
