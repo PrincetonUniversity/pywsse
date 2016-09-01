@@ -12,7 +12,7 @@ import django
 from django.test.runner import DiscoverRunner
 
 if __name__ == "__main__":
-	os.environ['DJANGO_SETTINGS_MODULE'] = 'wsse.server.django.tests.settings'
+	os.environ['DJANGO_SETTINGS_MODULE'] = 'wsse.tests.settings'
 	django.setup()
 	runner = DiscoverRunner()
 	failures = runner.run_tests([])
