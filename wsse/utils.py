@@ -70,7 +70,7 @@ class TokenBuilder(object):
 		:rtype: str
 		'''
 		if not nonce:
-			nonce = _generate_nonce()
+			nonce = _random_string()
 		if not timestamp:
 			timestamp = datetime.datetime.utcnow()
 
@@ -179,9 +179,8 @@ def check_token(token, get_password = lambda username: username):
 
 	try:
 		password = get_password(username)
-	except Exception as e:
-		msg = 'Password for user {} not found with error {}.'.format(
-			username, e.msg)
+	except KeyError:
+		msg = 'Password for user {} not found.'.format(username)
 		logger.error(msg)
 		raise exceptions.UserException(msg)
 	else:
@@ -286,19 +285,17 @@ def _parse_timestamp(timestamp):
 	logger.info(msg)
 	raise exceptions.InvalidTimestamp(msg)
 
-def _generate_nonce(length = None, allowed_chars = None):
+def _random_string(length = None, allowed_chars = None):
 	'''
-	Generate a nonce of the given length. If the length is greater than the
-	length specified in the settings, it will be truncated to the maximum
-	length.
+	Generate a random string of the given length.
 
-	:param length: length of nonce (defaults to settings.NONCE_LENGTH)
+	:param length: length of the string (defaults to settings.NONCE_LENGTH)
 	:rtype length: int
 
-	:param allowed_chars: characters to allow in nonce
+	:param allowed_chars: characters to allow in string
 	:rtype allowed_chars: str
 
-	:return: generated nonce
+	:return: generated string
 	:rtype: str
 	'''
 	if allowed_chars is None:
@@ -307,11 +304,11 @@ def _generate_nonce(length = None, allowed_chars = None):
 		except AttributeError:
 			allowed_chars = string.ascii_letters
 
-	if length is None or length > settings.NONCE_LENGTH:
+	if length is None:
 		length = settings.NONCE_LENGTH
 
-	nonce = ''.join(random.choice(allowed_chars) for _ in range(length))
-	return nonce
+	s = ''.join(random.choice(allowed_chars) for _ in range(length))
+	return s
 
 def _b64_digest(*args, **kwargs):
 	'''

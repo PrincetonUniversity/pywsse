@@ -16,44 +16,38 @@ import six
 from wsse import utils, settings, exceptions
 from wsse.server.default.store import SQLiteNonceStore
 
-class TestNonce(TestCase):
+class TestRandomString(TestCase):
 	'''
-	Test functions that deal with the nonce generation and usage.
+	Test functions that deal with the random string generation.
 	'''
-	def test_generate_nonce_length(self):
+	def test_random_string_length(self):
 		'''
-		The length of a generated nonce should match what is specified or the
+		The length of a generated string should match what is specified or the
 		default length.
 		'''
-		self.assertEqual(len(utils._generate_nonce(10)), 10)
-		self.assertEqual(len(utils._generate_nonce()), settings.NONCE_LENGTH)
-		self.assertEqual(len(utils._generate_nonce(settings.NONCE_LENGTH + 1)),
-			settings.NONCE_LENGTH)
+		self.assertEqual(len(utils._random_string(10)), 10)
+		self.assertEqual(len(utils._random_string()), settings.NONCE_LENGTH)
+		self.assertEqual(len(utils._random_string(settings.NONCE_LENGTH + 1)),
+			settings.NONCE_LENGTH + 1)
 
-	def test_generate_nonce_chars(self):
+	def test_random_string_chars(self):
 		'''
-		The characters in the nonce should only contain those in the specified
-		string.
+		The characters in the string should only contain those in the specified
+		list.
 		'''
 		allowed_chars = 'abcde'
-		nonce = utils._generate_nonce(allowed_chars = allowed_chars)
+		string = utils._random_string(allowed_chars = allowed_chars)
 
-		for c in nonce:
+		for c in string:
 			self.assertIn(c, allowed_chars)
 
-	def test_generate_nonce_random(self):
+	def test_random_string_is_random(self):
 		'''
-		Nonces generated in sequence should not clash.
+		Strings generated in sequence should not clash.
 		'''
-		nonces = [utils._generate_nonce() for _ in range(25)]
+		strings = [utils._random_string() for _ in range(25)]
 
-		self.assertEqual(len(set(nonces)), len(nonces))
-
-	def test_get_nonce_store(self):
-		'''
-		Get the nonce store. It should be the default store.
-		'''
-		self.assertIsInstance(utils._get_nonce_store(), SQLiteNonceStore)
+		self.assertEqual(len(set(strings)), len(strings))
 
 class TestBytes_Strings(TestCase):
 	'''
@@ -303,6 +297,12 @@ class TestTokens(TestCase):
 		store = utils._get_nonce_store()
 		store._clear()
 
+	def test_get_nonce_store(self):
+		'''
+		Get the nonce store. It should be the default store.
+		'''
+		self.assertIsInstance(utils._get_nonce_store(), SQLiteNonceStore)
+
 	def test_make_token(self):
 		'''
 		Make a token. It should match the proper parameters.
@@ -370,7 +370,7 @@ class TestTokens(TestCase):
 		Check a token that was just generated.
 		'''
 		now = datetime.datetime.utcnow()
-		nonce = utils._generate_nonce()
+		nonce = utils._random_string()
 		token = utils.make_token('user', 'secr3t', nonce, now)
 
 		self.assertEqual(utils.check_token(token, lambda x: 'secr3t'), 'user')
@@ -382,7 +382,7 @@ class TestTokens(TestCase):
 		'''
 		for fmt in settings.TIMESTAMP_FORMATS[1:]:
 			now = datetime.datetime.utcnow()
-			nonce = utils._generate_nonce()
+			nonce = utils._random_string()
 			token = utils.make_token('user', 'secr3t', nonce, now,
 				ts_format = fmt)
 
@@ -393,7 +393,7 @@ class TestTokens(TestCase):
 		Check a token that has a timestamp in an invalid format.
 		'''
 		ts = datetime.datetime.utcnow()
-		nonce = utils._generate_nonce()
+		nonce = utils._random_string()
 		token = utils.make_token('user', 'secr3t', nonce, ts,
 			ts_format = 'prefix-{}-suffix'.format(settings.TIMESTAMP_FORMATS[0]))
 
@@ -406,7 +406,7 @@ class TestTokens(TestCase):
 		'''
 		ts = (datetime.datetime.utcnow() -
 			datetime.timedelta(seconds = settings.TIMESTAMP_DURATION + 1))
-		nonce = utils._generate_nonce()
+		nonce = utils._random_string()
 		token = utils.make_token('user', 'secr3t', nonce, ts)
 
 		with self.assertRaises(exceptions.InvalidTimestamp):
@@ -418,7 +418,7 @@ class TestTokens(TestCase):
 		raised.
 		'''
 		ts = datetime.datetime.utcnow() + datetime.timedelta(seconds = 100)
-		nonce = utils._generate_nonce()
+		nonce = utils._random_string()
 		token = utils.make_token('user', 'secr3t', nonce, ts)
 
 		with self.assertRaises(exceptions.InvalidTimestamp):
@@ -430,12 +430,12 @@ class TestTokens(TestCase):
 		succeed.
 		'''
 		now = datetime.datetime.utcnow()
-		nonce = utils._generate_nonce()
+		nonce = utils._random_string()
 		past = now - datetime.timedelta(seconds = settings.TIMESTAMP_DURATION + 1)
 		past_token = utils.make_token('user', 'secr3t', nonce, past)
 
 		future = now + datetime.timedelta(seconds = 100)
-		nonce = utils._generate_nonce()
+		nonce = utils._random_string()
 		future_token = utils.make_token('user', 'secr3t', nonce, future)
 
 		with mock.patch.object(settings, 'SECURITY_CHECK_TIMESTAMP', False):
@@ -458,7 +458,7 @@ class TestTokens(TestCase):
 		Check a token with a short nonce - it should be rejected.
 		'''
 		now = datetime.datetime.utcnow()
-		nonce = utils._generate_nonce(length = settings.NONCE_LENGTH - 1)
+		nonce = utils._random_string(length = settings.NONCE_LENGTH - 1)
 		token = utils.make_token('user', 'secr3t', nonce, now)
 
 		with self.assertRaises(exceptions.InvalidNonce):
@@ -469,7 +469,7 @@ class TestTokens(TestCase):
 		Check a token with a long nonce - it should be rejected.
 		'''
 		now = datetime.datetime.utcnow()
-		nonce = utils._generate_nonce() + 'a'
+		nonce = utils._random_string() + 'a'
 		token = utils.make_token('user', 'secr3t', nonce, now)
 
 		with self.assertRaises(exceptions.InvalidNonce):
@@ -480,7 +480,7 @@ class TestTokens(TestCase):
 		Check a token twice - a replay attack should be detected.
 		'''
 		now = datetime.datetime.utcnow()
-		nonce = utils._generate_nonce()
+		nonce = utils._random_string()
 		token = utils.make_token('user', 'secr3t', nonce, now)
 
 		utils.check_token(token, lambda x: 'secr3t')
@@ -493,7 +493,7 @@ class TestTokens(TestCase):
 		should not be detected.
 		'''
 		now = datetime.datetime.utcnow()
-		nonce = utils._generate_nonce()
+		nonce = utils._random_string()
 		token = utils.make_token('user', 'secr3t', nonce, now)
 
 		with mock.patch.object(settings, 'SECURITY_CHECK_NONCE', False):
@@ -509,7 +509,7 @@ class TestTokens(TestCase):
 		Check a valid token with an invalid password.
 		'''
 		now = datetime.datetime.utcnow()
-		nonce = utils._generate_nonce()
+		nonce = utils._random_string()
 		token = utils.make_token('user', 'wrong password', nonce, now)
 
 		self.assertIsNone(utils.check_token(token, lambda x: 'secr3t'))
@@ -519,7 +519,7 @@ class TestTokens(TestCase):
 		Check a valid token with an alternative algorithm.
 		'''
 		now = datetime.datetime.utcnow()
-		nonce = utils._generate_nonce()
+		nonce = utils._random_string()
 		token = utils.make_token('user', 'secr3t', nonce, now,
 			algorithm = 'sha512')
 
@@ -533,7 +533,7 @@ class TestTokens(TestCase):
 		'''
 		for algorithm in settings.PROHIBITED_DIGEST_ALGORITHMS:
 			now = datetime.datetime.utcnow()
-			nonce = utils._generate_nonce()
+			nonce = utils._random_string()
 			token = utils.make_token('user', 'secr3t', nonce, now,
 				algorithm = algorithm.lower())
 
