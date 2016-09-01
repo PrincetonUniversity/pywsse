@@ -1,4 +1,5 @@
 # setup.py
+# coding=utf-8
 # py-wsse
 # Authors: Rushy Panchal, Naphat Sanguansin, Adam Libresco, Jérémie Lumbroso
 # Date: August 31st, 2016
