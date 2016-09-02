@@ -441,7 +441,8 @@ class TestTokens(TestCase):
 		Check a token that has a timestamp in the future. An error should be
 		raised.
 		'''
-		ts = datetime.datetime.utcnow() + datetime.timedelta(seconds = 100)
+		ts = (datetime.datetime.utcnow() +
+			datetime.timedelta(seconds = settings.DRIFT_OFFSET + 1))
 		nonce = utils._random_string()
 		token = utils.make_token('user', 'secr3t', nonce, ts)
 
@@ -458,7 +459,7 @@ class TestTokens(TestCase):
 		past = now - datetime.timedelta(seconds = settings.TIMESTAMP_DURATION + 1)
 		past_token = utils.make_token('user', 'secr3t', nonce, past)
 
-		future = now + datetime.timedelta(seconds = 100)
+		future = now + datetime.timedelta(seconds = settings.DRIFT_OFFSET + 1)
 		nonce = utils._random_string()
 		future_token = utils.make_token('user', 'secr3t', nonce, future)
 
