@@ -1,9 +1,9 @@
 # wsse/settings.py
 # coding=utf-8
-# py-wsse
+# pywsse
 # Authors: Rushy Panchal, Naphat Sanguansin, Adam Libresco, Jérémie Lumbroso
 # Date: August 30th, 2016
-# Description: Settings for py-wsse. These settings are shared by the server
+# Description: Settings for pywsse. These settings are shared by the server
 # 	and client and can be modified to alter their behavior.
 
 # The duration for which the timestamp is valid (in seconds).

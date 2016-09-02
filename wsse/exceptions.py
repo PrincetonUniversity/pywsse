@@ -1,9 +1,9 @@
 # wsse/exceptions.py
 # coding=utf-8
-# py-wsse
+# pywsse
 # Authors: Rushy Panchal, Naphat Sanguansin, Adam Libresco, Jérémie Lumbroso
 # Date: August 30th, 2016
-# Description: Exceptions for py-wsse.
+# Description: Exceptions for pywsse.
 
 class WSSEException(Exception):
 	'''

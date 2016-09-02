@@ -1,6 +1,6 @@
 # wsse/server/django/app.py
 # coding=utf-8
-# py-wsse
+# pywsse
 # Authors: Rushy Panchal, Naphat Sanguansin, Adam Libresco, Jérémie Lumbroso
 # Date: September 2nd, 2016
 # Description: App configuration for Django.
