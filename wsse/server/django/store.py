@@ -14,9 +14,6 @@ class DjangoNonceStore(object):
 	'''
 	Nonce store for Django ORM.
 	'''
-	def __init__(self):
-		pass
-
 	def add_nonce(self, nonce, timestamp = None):
 		'''
 		Add a nonce to the store.

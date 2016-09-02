@@ -19,6 +19,25 @@ from django.contrib.auth.models import User
 from wsse import utils, settings
 from wsse.server.django.models import UserSecret
 
+def setUpModule():
+	'''
+	Set up the module for running tests.
+	'''
+	# Set the nonce store to the Django store after saving the current settings
+	# so they can be restored later.
+	global __old_nonce_settings
+	__old_nonce_settings = (settings.NONCE_STORE, settings.NONCE_STORE_ARGS)
+
+	settings.NONCE_STORE = 'wsse.server.django.store.DjangoNonceStore'
+	settings.NONCE_STORE_ARGS = []
+
+def tearDownModule():
+	'''
+	Tear down the module after running tests.
+	'''
+	# Restore the nonce settings.
+	settings.NONCE_STORE, settings.NONCE_STORE_ARGS = __old_nonce_settings
+
 class WSSEAuthenticationTests(APITestCase):
 	'''
 	Test WSSE Authentication on the API.
@@ -32,7 +51,7 @@ class WSSEAuthenticationTests(APITestCase):
 		Perform HTTP authentication, through headers, in a request.
 		The headers are automatically cleared afterwards.
 		'''
-		kwargs = {settings.REQUEST_HEADER: header}
+		kwargs = {utils._django_header(settings.REQUEST_HEADER): header}
 		self.client.credentials(**kwargs)
 		yield
 

@@ -53,7 +53,8 @@ class WSSEAuthentication(authentication.BaseAuthentication):
 		:raises rest_framework.exceptions.AuthenticationFailed:
 			if authentication fails
 		'''
-		wsse_header = request.META.get(settings.REQUEST_HEADER)
+		header_name = utils._django_header(settings.REQUEST_HEADER)
+		wsse_header = request.META.get(header_name)
 		if not wsse_header:
 			# If no header is provided, do not attempt authentication.
 			return None

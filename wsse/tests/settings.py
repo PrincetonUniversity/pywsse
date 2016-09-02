@@ -17,6 +17,7 @@ DATABASES = {
 SECRET_KEY = "BITlFxZunJXWaoiKhMAE"
 
 ROOT_URLCONF = 'wsse.tests.urls'
+STATIC_URL = '/static/'
 
 INSTALLED_APPS = (
 	'django.contrib.auth',
@@ -31,6 +32,9 @@ INSTALLED_APPS = (
 	# Server-side applications
 	'wsse.server.django',
 	'wsse.server.drf',
+
+	# Client-side applications: added so tests can be run
+	'wsse.client.requests',
 	)
 
 REST_FRAMEWORK = {

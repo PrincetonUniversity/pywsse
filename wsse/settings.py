@@ -36,10 +36,10 @@ NONCE_LENGTH = 64
 
 # Storage backend for the nonces.
 NONCE_STORE = 'wsse.server.default.store.SQLiteNonceStore'
-NONCE_STORE_PARAMS = (':memory:',)
+NONCE_STORE_ARGS = (':memory:',)
 
 # Name for the request header.
-REQUEST_HEADER = 'HTTP_X_WSSE'
+REQUEST_HEADER = 'X-WSSE'
 
 # Whether or not to check the nonce for validity.
 SECURITY_CHECK_NONCE = True

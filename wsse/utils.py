@@ -365,7 +365,7 @@ def _get_nonce_store():
 	if store_name in _STORES:
 		return _STORES[store_name]
 
-	store = pydoc.locate(store_name)(*settings.NONCE_STORE_PARAMS)
+	store = pydoc.locate(store_name)(*settings.NONCE_STORE_ARGS)
 
 	_STORES[store_name] = store
 
@@ -400,3 +400,17 @@ def _from_bytes(b):
 		return b.decode('utf-8')
 
 	return b
+
+def _django_header(header):
+	'''
+	Convert a header name to a Django header name.
+
+	For example, the X-Header argument is transformed into HTTP_X_HEADER.
+
+	:param header: header to transform
+	:type header: str
+
+	:return: transformed header
+	:rtype: str
+	'''
+	return 'HTTP_{}'.format(header.replace('-', '_'))
