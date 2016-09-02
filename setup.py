@@ -37,6 +37,8 @@ setup(
 		'nose',
 		'mock>=2.0.0',
 		'django>=1.9',
-		'djangorestframework>=3.4.6'],
+		'djangorestframework>=3.4.6',
+		'requests>=2.11.1',
+		],
 	test_suite = 'nose.collector',
 )

@@ -33,5 +33,6 @@ class WSSEAuth(requests.auth.AuthBase):
 
 	def __call__(self, r):
 		'''Attach the appropriate request header to attempt WSSE authentication.'''
-		r.headers[settings.REQUEST_HEADER] = self.token_builder.make_token()
+		token = self.token_builder.make_token()
+		r.headers[settings.REQUEST_HEADER] = token
 		return r
