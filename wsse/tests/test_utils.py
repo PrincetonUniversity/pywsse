@@ -10,9 +10,7 @@ import hashlib
 import base64
 import datetime
 
-from six.moves import range
 import mock
-import six
 
 from wsse import utils, settings, exceptions
 from wsse.server.default.store import SQLiteNonceStore
@@ -58,16 +56,16 @@ class TestBytes_Strings(TestCase):
 		'''
 		Converting a string to bytes and bytes to bytes should both return bytes.
 		'''
-		self.assertIsInstance(utils._to_bytes('string'), six.binary_type)
-		self.assertIsInstance(utils._to_bytes(b'bytes'), six.binary_type)
+		self.assertIsInstance(utils._to_bytes('string'), bytes)
+		self.assertIsInstance(utils._to_bytes(b'bytes'), bytes)
 
 	def test_from_bytes(self):
 		'''
 		Converting a string from bytes and bytes from bytes should both return a
 		string.
 		'''
-		self.assertIsInstance(utils._from_bytes('string'), six.string_types)
-		self.assertIsInstance(utils._from_bytes(b'bytes'), six.string_types)
+		self.assertIsInstance(utils._from_bytes('string'), utils.string_types)
+		self.assertIsInstance(utils._from_bytes(b'bytes'), utils.string_types)
 
 class TestDigests(TestCase):
 	'''

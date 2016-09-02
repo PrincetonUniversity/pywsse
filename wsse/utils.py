@@ -14,11 +14,13 @@ import base64
 import re
 import pydoc
 
-from six.moves import range
-import six
-
 from . import settings
 from . import exceptions
+
+try:
+	string_types = (str, basestring, unicode)
+except NameError:
+	string_types = (str,)
 
 logger = logging.getLogger(settings.LOGGER_NAME)
 
@@ -205,7 +207,8 @@ with each request.'''.format(nonce)
 			valid_digest = _to_bytes(_b64_digest(nonce, created, password,
 				algorithm = algorithm.lower()))
 
-			if valid_digest == encoded_digest:
+			if ((valid_digest == encoded_digest) or
+				(valid_digest == _to_bytes(encoded_digest))):
 				return username
  
 		# Check all of the prohibited algorithms - if the received digest matches
@@ -391,7 +394,7 @@ def _to_bytes(s):
 	:return: encoded string as binary data
 	:rtype: bytes
 	'''
-	if not isinstance(s, six.binary_type):
+	if not isinstance(s, bytes):
 		return s.encode('utf-8')
 
 	return s
@@ -406,7 +409,7 @@ def _from_bytes(b):
 	:return: decoded string 
 	:rtype: str
 	'''
-	if isinstance(b, six.binary_type):
+	if isinstance(b, bytes):
 		return b.decode('utf-8')
 
 	return b

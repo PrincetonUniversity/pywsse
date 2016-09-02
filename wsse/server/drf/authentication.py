@@ -62,7 +62,7 @@ class WSSEAuthentication(authentication.BaseAuthentication):
 		try:
 			username = utils.check_token(wsse_header, self._get_password)
 		except exceptions.WSSEException as e:
-			raise AuthenticationFailed(e.message)
+			raise AuthenticationFailed(str(e))
 
 		# There is no need to error-check getting the user because that is
 		# already done in _get_password.

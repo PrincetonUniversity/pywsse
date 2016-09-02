@@ -12,6 +12,12 @@ from django.contrib.auth.models import User
 
 from ... import settings, utils
 
+def _generate_secret():
+	'''
+	Generate a new secret key.
+	'''
+	return utils._random_string(length = settings.SECRET_KEY_LENGTH)
+
 class WSSEEvent(models.Model):
 	'''
 	The `WSSEEvent` object records an event that occured with the WSSE
@@ -35,11 +41,4 @@ class UserSecret(models.Model):
 	user = models.OneToOneField(User, on_delete = models.CASCADE,
 		db_index = True)
 	secret = models.CharField(max_length = settings.SECRET_KEY_LENGTH,
-		default = lambda: UserSecret.generate(), blank = True, null = False)
-
-	@classmethod
-	def generate(cls):
-		'''
-		Generate a new secret key.
-		'''
-		return utils._random_string(length = settings.SECRET_KEY_LENGTH)
+		default = _generate_secret, blank = True, null = False)

@@ -12,7 +12,7 @@ TIMESTAMP_DURATION = 2 * 60 * 60
 
 # Number of seconds to allow for 'drift' - offsets in the future-timestamp
 # checking to allow for minor differences in time settings.
-DRIFT_OFFSET = 10
+DRIFT_OFFSET = 2 * 60
 
 # Timestamp formats. All timestamps are converted to UTC once parsed. If the
 # timestamp is naive (i.e does not specify UTC or offset from UTC), it is

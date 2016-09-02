@@ -8,13 +8,21 @@
 from setuptools import setup
 
 setup(
-	name = 'py-wsse',
-	packages = ['wsse'],
-	version = '0.1',
+	name = 'pywsse',
+	packages = [
+		'wsse',
+		'wsse.server',
+		'wsse.server.django',
+		'wsse.server.drf',
+		'wsse.server.default',
+		'wsse.client',
+		'wsse.client.requests',
+		],
+	version = '0.1.1',
 	description = 'WSSE Authentication for various server and client backends.',
 	author = 'Rushy Panchal',
 	author_email = 'rushy.panchal@princeton.edu',
-	url = 'https://github.com/PrincetonUniversity/py-wsse',
+	url = 'https://github.com/PrincetonUniversity/pywsse',
 	keywords = ['rest', 'authentication', 'wsse'],
 	license = 'LGPLv3',
 	classifiers = [

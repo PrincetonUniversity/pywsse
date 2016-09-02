@@ -1,0 +1,11 @@
+# wsse/server/django/app.py
+# coding=utf-8
+# py-wsse
+# Authors: Rushy Panchal, Naphat Sanguansin, Adam Libresco, Jérémie Lumbroso
+# Date: September 2nd, 2016
+# Description: App configuration for Django.
+
+from django.apps import AppConfig
+
+class WsseConfig(AppConfig):
+	name = 'wsse'

@@ -6,6 +6,7 @@
 # Description: Test application settings.
 
 DEBUG = True
+TESTING = True
 
 DATABASES = {
 	'default': {
@@ -36,6 +37,8 @@ INSTALLED_APPS = (
 	# Client-side applications: added so tests can be run
 	'wsse.client.requests',
 	)
+
+MIGRATION_MODULES = {'wsse': None}
 
 REST_FRAMEWORK = {
 	'DEFAULT_AUTHENTICATION_CLASSES': (
