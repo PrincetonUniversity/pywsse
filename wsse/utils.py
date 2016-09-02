@@ -150,8 +150,9 @@ def check_token(token, get_password = lambda username: username):
 
 	try:
 		nonce = base64.b64decode(encoded_nonce)
-	except (TypeError, ValueError):
-		msg = 'Nonce should be properly base64 encoded: {}'.format(encoded_nonce)
+	except (TypeError, ValueError) as e:
+		msg = 'Nonce should be properly base64 encoded: {}.\nError: {!r}'.format(
+			encoded_nonce, e)
 		logger.info(msg)
 		raise exceptions.InvalidNonce(msg)
 
@@ -164,7 +165,12 @@ def check_token(token, get_password = lambda username: username):
 		future_time = now + datetime.timedelta(seconds = settings.DRIFT_OFFSET)
 
 		if (expired_time > timestamp or timestamp > future_time):
-			msg = 'The timestamp {} is expired or in the future.'.format(created)
+			msg = '''The timestamp {} is expired or in the future. The timestamp
+is required to be between {} and {} - a time window of {} seconds.'''.format(
+	created, expired_time.strftime(settings.TIMESTAMP_FORMATS[0]),
+	future_time.strftime(settings.TIMESTAMP_FORMATS[0]),
+	settings.TIMESTAMP_DURATION)
+
 			logger.info(msg)
 			raise exceptions.InvalidTimestamp(msg)
 
@@ -179,7 +185,8 @@ def check_token(token, get_password = lambda username: username):
 
 		# Check if the nonce has already been used.
 		if nonce_store.has_nonce(nonce):
-			msg = 'The nonce {} has already been used.'.format(nonce)
+			msg = '''The nonce {} has already been used. Please use a fresh nonce
+with each request.'''.format(nonce)
 			logger.info(msg)
 			raise exceptions.InvalidNonce(msg)
 
@@ -188,7 +195,7 @@ def check_token(token, get_password = lambda username: username):
 	try:
 		password = get_password(username)
 	except KeyError:
-		msg = 'Password for user {} not found.'.format(username)
+		msg = 'User {} not found.'.format(username)
 		logger.error(msg)
 		raise exceptions.UserException(msg)
 	else:
@@ -209,7 +216,10 @@ def check_token(token, get_password = lambda username: username):
 				algorithm = algorithm.lower())
 
 			if valid_digest == encoded_digest:
-				msg = 'Prohibited algorithm {} used for digest'.format(algorithm)
+				msg = '''Prohibited algorithm {} used for digest. Please use one of the
+following algorithms: {!r}.
+Note that these algorithms are prohibited: {!r}.'''.format(algorithm,
+	settings.ALLOWED_DIGEST_ALGORITHMS, settings.PROHIBITED_DIGEST_ALGORITHMS)
 				logger.info(msg)
 				raise exceptions.AlgorithmProhibited(msg)
 
@@ -241,7 +251,7 @@ def _parse_token(token):
 			missing_params.append(param)
 
 	if missing_params:
-		msg = 'Token {} missing parameters: {!r}'.format(token, missing_params)
+		msg = 'Token {} missing parameters: {!r}.'.format(token, missing_params)
 		logger.info(msg)
 
 		raise exceptions.InvalidToken(msg)
@@ -288,8 +298,8 @@ def _parse_timestamp(timestamp):
 
 			else: continue
 		
-	msg = 'Invalid timestamp {}, expected one of {!r}.'.format(timestamp,
-		settings.TIMESTAMP_FORMATS)
+	msg = 'Invalid timestamp {}, expected one format from {!r}.'.format(
+		timestamp, settings.TIMESTAMP_FORMATS)
 	logger.info(msg)
 	raise exceptions.InvalidTimestamp(msg)
 
