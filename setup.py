@@ -5,20 +5,12 @@
 # Date: August 31st, 2016
 # Description: Setuptools configuration.
 
-from setuptools import setup
+from setuptools import setup, find_packages
 
 setup(
 	name = 'pywsse',
-	packages = [
-		'wsse',
-		'wsse.server',
-		'wsse.server.django',
-		'wsse.server.drf',
-		'wsse.server.default',
-		'wsse.client',
-		'wsse.client.requests',
-		],
-	version = '0.1.1',
+	packages = find_packages(),
+	version = '0.1.2',
 	description = 'WSSE Authentication for various server and client backends.',
 	author = 'Rushy Panchal',
 	author_email = 'rushy.panchal@princeton.edu',
