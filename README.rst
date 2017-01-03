@@ -138,3 +138,19 @@ and add it to your list of transports to :code:`coreapi.Client`:
 
 You can also pass in any of the arguments or keyword arguments to
 `coreapi.transports.HTTPTransport` *after* the username and password.
+
+Development
+===========
+
+To run the development version of wsse, clone the repository and install the
+testing requirements in :code:`requirements.txt`. Then, run the test suite in
+:code:`runtests.py`:
+
+.. code:: bash
+
+  $ git clone git@github.com:PrincetonUniversity/pywsse.git
+  $ cd pywsse
+  $ virtualenv env
+  $ source env/bin/activate
+  $ pip install -r requirements.txt
+  $ python runtests.py
