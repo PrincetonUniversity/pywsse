@@ -25,6 +25,7 @@ The following backend frameworks are currently supported:
 In addition, the following client packages are supported:
 
 * `requests`_
+* `coreapi`_
 
 Django REST Framework
 ^^^^^^^^^^^^^^^^^^^^^
@@ -114,3 +115,26 @@ each request:
 
   response = requests.get('http://localhost:8000/api/1/', auth = auth)
   next_response = requests.get('http://localhost:8000/api/2/', auth = auth)
+
+coreapi
+^^^^^^^
+
+The **coreapi** plugin is just a pluggable transport that automatically
+attaches the appropriate header before sending the request.
+
+To make use of this transport, import the
+:code:`wsse.client.coreapi.transport.WSSEAuthenticatedHTTPTransport` class
+and add it to your list of transports to :code:`coreapi.Client`:
+
+.. code:: python
+
+  import coreapi
+  from wsse.client.coreapi.transport import WSSEAuthenticatedHTTPTransport
+
+  wsse_transport = WSSEAuthenticatedHTTPTransport('username', 'password')
+  client = coreapi.Client(transports = [wsse_transport])
+
+  schema = client.get('http://api.example.com')
+
+You can also pass in any of the arguments or keyword arguments to
+`coreapi.transports.HTTPTransport` *after* the username and password.
