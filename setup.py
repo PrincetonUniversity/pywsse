@@ -15,7 +15,7 @@ setup(
 	author = 'Rushy Panchal',
 	author_email = 'rushy.panchal@princeton.edu',
 	url = 'https://github.com/PrincetonUniversity/pywsse',
-	keywords = ['rest', 'authentication', 'wsse'],
+	keywords = ['REST', 'authentication', 'wsse'],
 	license = 'LGPLv3',
 	classifiers = [
 		'Programming Language :: Python :: 2',
@@ -39,6 +39,7 @@ setup(
 		'django>=1.9',
 		'djangorestframework>=3.4.6',
 		'requests>=2.11.1',
+		'coreapi>=2.1.1',
 		],
 	test_suite = 'nose.collector',
 )
