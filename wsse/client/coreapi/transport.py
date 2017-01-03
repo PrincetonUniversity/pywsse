@@ -31,10 +31,10 @@ class WSSEAuthenticatedHTTPTransport(HTTPTransport):
 	:type password: str
 	'''
 	def __init__(self, username, password, *args, **kwargs):
+		self._token_builder = utils.TokenBuilder(username, password)
 		super(WSSEAuthenticatedHTTPTransport, self).__init__(*args, **kwargs)
-		self.token_builder = utils.TokenBuilder(username, password)
 
 	@property
 	def headers(self):
 		h = super(WSSEAuthenticatedHTTPTransport, self).headers
-		return h.set(settings.REQUEST_HEADER, self.token_builder.make_token())
+		return h.set(settings.REQUEST_HEADER, self._token_builder.make_token())
