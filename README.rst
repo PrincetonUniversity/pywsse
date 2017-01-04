@@ -149,8 +149,8 @@ Development
 ===========
 
 To run the development version of wsse, clone the repository and install the
-testing requirements in :code:`requirements.txt`. Then, run the test suite in
-:code:`runtests.py`:
+testing requirements in :code:`requirements.txt`. Then, run the test suite
+using either :code:`tox` or :code:`detox`:
 
 .. code:: bash
 
@@ -160,3 +160,9 @@ testing requirements in :code:`requirements.txt`. Then, run the test suite in
   $ source env/bin/activate
   $ pip install -r requirements.txt
   $ detox
+
+.. note::
+
+  :code:`detox` is a parallel version of :code:`tox`. It only runs with Python
+  2.6-2.7 (but it can and will run tests for Python 3.x versions).
+
