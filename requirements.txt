@@ -4,10 +4,5 @@
 # Date: January 3rd, 2017
 # Description: These requirements are for running the test suite only.
 
-coreapi>=2.1.1
 detox==0.10.0
-django>=1.9
-djangorestframework>=3.4.6
-mock>=2.0.0
-requests>=2.11.1
 tox==2.5.0

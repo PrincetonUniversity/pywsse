@@ -159,4 +159,4 @@ testing requirements in :code:`requirements.txt`. Then, run the test suite in
   $ virtualenv env
   $ source env/bin/activate
   $ pip install -r requirements.txt
-  $ python runtests.py
+  $ detox

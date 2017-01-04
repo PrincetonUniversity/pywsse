@@ -14,9 +14,9 @@ machine:
 
 dependencies:
   pre:
-    - pip install tox detox tox-pyenv
-    - pyenv local 2.7.11 3.1.5 3.2.6 3.3.6 3.4.4 3.5.2
+    - pip install tox
+    - pyenv global 2.7.11 3.4.4 3.5.2
 
 test:
   override:
-    - detox
+    - tox
