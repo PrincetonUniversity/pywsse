@@ -80,18 +80,6 @@ for the **pywsse** package:
   wsse.settings.NONCE_STORE = 'wsse.server.django.store.DjangoNonceStore'
   wsse.settings.NONCE_STORE_ARGS = []
 
-:note: Make sure to run the migrations after setting the nonce store.
-  Particularly, you must run the migrations for the :code:`wsse` app:
-
-  .. code:: bash
-
-    $ python manage.py makemigrations wsse
-    $ python manage.py migrate wsse
-
-:note: We are looking for a way to make those migrations automatically
-  detected, so that users do not have to run :code:`makemigrations wsse` -
-  a pull request with this feature would be greatly appreciated!
-
 requests
 ^^^^^^^^
 
