@@ -8,8 +8,8 @@
 from django.test import TransactionTestCase
 
 from wsse.server.default.tests import test_store
-from wsse.server.django import store
-from wsse.server.django.models import WSSEEvent
+from wsse.server.django.wsse import store
+from wsse.server.django.wsse.models import WSSEEvent
 
 class TestDjangoNonceStore(TransactionTestCase,
 	test_store.TestSQLiteNonceStore):

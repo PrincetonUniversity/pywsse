@@ -12,7 +12,7 @@ from rest_framework import status
 import requests
 
 from wsse import settings
-from wsse.server.django.models import UserSecret
+from wsse.server.django.wsse.models import UserSecret
 from wsse.client.requests.auth import WSSEAuth
 
 def setUpModule():
@@ -24,7 +24,7 @@ def setUpModule():
 	global __old_nonce_settings
 	__old_nonce_settings = (settings.NONCE_STORE, settings.NONCE_STORE_ARGS)
 
-	settings.NONCE_STORE = 'wsse.server.django.store.DjangoNonceStore'
+	settings.NONCE_STORE = 'wsse.server.django.wsse.store.DjangoNonceStore'
 	settings.NONCE_STORE_ARGS = []
 
 def tearDownModule():

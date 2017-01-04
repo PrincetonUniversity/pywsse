@@ -6,7 +6,7 @@ import datetime
 from django.conf import settings
 from django.db import migrations, models
 import django.db.models.deletion
-import wsse.server.django.models
+import wsse.server.django.wsse.models
 
 
 class Migration(migrations.Migration):
@@ -22,7 +22,7 @@ class Migration(migrations.Migration):
             name='UserSecret',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('secret', models.CharField(blank=True, default=wsse.server.django.models._generate_secret, max_length=64)),
+                ('secret', models.CharField(blank=True, default=wsse.server.django.wsse.models._generate_secret, max_length=64)),
                 ('user', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
             ],
         ),

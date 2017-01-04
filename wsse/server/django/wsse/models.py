@@ -1,4 +1,4 @@
-# wsse/server/django/models.py
+# wsse/server/django/wsse/models.py
 # coding=utf-8
 # pywsse
 # Authors: Rushy Panchal, Naphat Sanguansin, Adam Libresco, Jérémie Lumbroso
@@ -10,7 +10,7 @@ import datetime
 from django.db import models
 from django.contrib.auth.models import User
 
-from ... import settings, utils
+from .... import settings, utils
 
 def _generate_secret():
 	'''

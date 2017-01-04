@@ -1,4 +1,4 @@
-# wsse/server/django/store.py
+# wsse/server/django/wsse/store.py
 # coding=utf-8
 # pywsse
 # Authors: Rushy Panchal, Naphat Sanguansin, Adam Libresco, Jérémie Lumbroso
@@ -8,7 +8,7 @@
 import datetime
 
 from .models import WSSEEvent
-from ... import settings
+from .... import settings
 
 class DjangoNonceStore(object):
 	'''

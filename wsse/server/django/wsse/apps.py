@@ -1,4 +1,4 @@
-# wsse/server/django/app.py
+# wsse/server/django/wsse/apps.py
 # coding=utf-8
 # pywsse
 # Authors: Rushy Panchal, Naphat Sanguansin, Adam Libresco, Jérémie Lumbroso
@@ -8,4 +8,4 @@
 from django.apps import AppConfig
 
 class WsseConfig(AppConfig):
-	name = 'wsse.server.django'
+	name = 'wsse.server.django.wsse'

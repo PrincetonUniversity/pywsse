@@ -13,7 +13,7 @@ except ImportError:
 	raise ImportError('django and rest_framework required to use DRF plugin')
 
 from ... import utils, exceptions, settings
-from ..django.models import UserSecret
+from ..django.wsse.models import UserSecret
 
 class WSSEAuthentication(authentication.BaseAuthentication):
 	'''

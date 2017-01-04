@@ -17,7 +17,7 @@ from django.core.urlresolvers import reverse_lazy
 from django.contrib.auth.models import User
 
 from wsse import utils, settings
-from wsse.server.django.models import UserSecret
+from wsse.server.django.wsse.models import UserSecret
 
 def setUpModule():
 	'''
@@ -28,7 +28,7 @@ def setUpModule():
 	global __old_nonce_settings
 	__old_nonce_settings = (settings.NONCE_STORE, settings.NONCE_STORE_ARGS)
 
-	settings.NONCE_STORE = 'wsse.server.django.store.DjangoNonceStore'
+	settings.NONCE_STORE = 'wsse.server.django.wsse.store.DjangoNonceStore'
 	settings.NONCE_STORE_ARGS = []
 
 def tearDownModule():

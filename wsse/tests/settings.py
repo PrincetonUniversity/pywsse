@@ -31,10 +31,8 @@ INSTALLED_APPS = (
 	'rest_framework',
 
 	# Server-side applications
-	'wsse.server.django'
+	'wsse.server.django.wsse'
 	)
-
-MIGRATION_MODULES = {'wsse': None}
 
 REST_FRAMEWORK = {
 	'DEFAULT_AUTHENTICATION_CLASSES': (

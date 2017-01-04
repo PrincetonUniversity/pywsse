@@ -51,7 +51,7 @@ To utilize the Django REST Framework plugin, install the *Django* plugin to
 
     'rest_framework',
 
-    'wsse.server.django',
+    'wsse.server.django.wsse',
     )
 
 In addition, add the authentication backend
@@ -77,8 +77,15 @@ for the **pywsse** package:
 .. code:: python
 
   import wsse
-  wsse.settings.NONCE_STORE = 'wsse.server.django.store.DjangoNonceStore'
+  wsse.settings.NONCE_STORE = 'wsse.server.django.wsse.store.DjangoNonceStore'
   wsse.settings.NONCE_STORE_ARGS = []
+
+:note: Make sure to run the migrations after setting the nonce store.
+  Particularly, you must run the migrations for the :code:`wsse` app:
+
+  .. code:: bash
+
+    $ python manage.py migrate wsse
 
 requests
 ^^^^^^^^
