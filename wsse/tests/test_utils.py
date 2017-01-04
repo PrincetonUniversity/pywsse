@@ -236,6 +236,14 @@ class TestTimestampParser(TestCase):
 		'''
 		for timestamp, expected in self.expected_values.items():
 			received = utils._parse_timestamp(timestamp)
+
+			# On Python 3.x, the datetime parser will account for timezones. As a
+			# result, the expected and received datetimes will be different because
+			# one will contain timezone info. To nromalize them, we strip out the
+			# timezone info (tzinfo) and account for the offset.
+			if received.tzinfo:
+				received = received.replace(tzinfo=None) + received.utcoffset()
+
 			msg = '({}) {!r} != {!r}'.format(timestamp, received, expected)
 			self.assertEqual(received, expected, msg)
 

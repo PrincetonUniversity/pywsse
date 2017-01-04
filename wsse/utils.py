@@ -194,6 +194,7 @@ with each request.'''.format(nonce)
 
 		nonce_store.add_nonce(nonce)
 
+	encoded_digest_b = _to_bytes(encoded_digest)
 	try:
 		password = get_password(username)
 	except KeyError:
@@ -207,18 +208,17 @@ with each request.'''.format(nonce)
 			valid_digest = _to_bytes(_b64_digest(nonce, created, password,
 				algorithm = algorithm.lower()))
 
-			if ((valid_digest == encoded_digest) or
-				(valid_digest == _to_bytes(encoded_digest))):
+			if valid_digest == encoded_digest_b:
 				return username
  
 		# Check all of the prohibited algorithms - if the received digest matches
 		# that of a prohibited algorithm, then an error is raised saying that
 		# the algorithm is prohibited.
 		for algorithm in settings.PROHIBITED_DIGEST_ALGORITHMS:
-			valid_digest = _b64_digest(nonce, created, password,
-				algorithm = algorithm.lower())
+			valid_digest = _to_bytes(_b64_digest(nonce, created, password,
+				algorithm = algorithm.lower()))
 
-			if valid_digest == encoded_digest:
+			if valid_digest == encoded_digest_b:
 				msg = '''Prohibited algorithm {} used for digest. Please use one of the
 following algorithms: {!r}.
 Note that these algorithms are prohibited: {!r}.'''.format(algorithm,
