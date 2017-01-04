@@ -1,13 +1,19 @@
 pywsse
 -------
 
+.. image:: https://circleci.com/gh/PrincetonUniversity/pywsse.svg?style=svg
+    :target: https://circleci.com/gh/PrincetonUniversity/pywsse
+
+.. image:: https://badge.fury.io/py/pywsse.svg
+    :target: https://badge.fury.io/py/pywsse
+
 Authors: Rushy Panchal, Naphat Sanguansin, Adam Libresco, Jérémie Lumbroso.
 
 Introduction
 ============
 **pywsse** is an all-encompassing package to meet various needs for WSSE
 usage - both as an authentication backend (for various frameworks) and as a
-plug-and-play authenticaiton mechanism for clients.
+plug-and-play authentication mechanism for clients.
 
 The motivation for this package came after dealing with various ambiguities
 in the WSSE protocol - some servers require specific digest algorithms and
