@@ -31,11 +31,7 @@ INSTALLED_APPS = (
 	'rest_framework',
 
 	# Server-side applications
-	'wsse.server.django',
-	'wsse.server.drf',
-
-	# Client-side applications: added so tests can be run
-	'wsse.client.requests',
+	'wsse.server.django'
 	)
 
 MIGRATION_MODULES = {'wsse': None}

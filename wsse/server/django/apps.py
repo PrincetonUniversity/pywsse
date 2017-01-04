@@ -8,4 +8,4 @@
 from django.apps import AppConfig
 
 class WsseConfig(AppConfig):
-	name = 'wsse'
+	name = 'wsse.server.django'
