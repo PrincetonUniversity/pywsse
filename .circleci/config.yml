@@ -1,0 +1,37 @@
+# circle.yml
+# pywsse
+# Author: Rushy Panchal
+# Date: January 3rd, 2017
+# Description: CircleCI configuration.
+
+version: 2
+jobs:
+  build:
+    docker:
+      - image: randomknowledge/docker-pyenv-tox
+      - image: postgres:9.6
+    steps:
+      - checkout
+      - restore_cache:
+          key: wsse-{{ .Branch }}-{{ checksum "requirements.txt" }}-{{ checksum "tox.ini" }}
+      - run: |
+          pyenv install -s 2.7.14
+          pyenv install -s 3.4.4
+          pyenv install -s 3.5.3
+          pyenv install -s 3.6.2
+      - run: pyenv global 2.7.14 3.4.4 3.5.3 3.6.2
+      - run: pyenv init > /dev/null && pyenv shell && tox
+      - save_cache:
+          key: wsse-{{ .Branch }}-{{ checksum "requirements.txt" }}-{{ checksum "tox.ini" }}
+          paths:
+            - .tox
+    environment:
+      ENV: test
+      BUILD_CI: true
+
+workflows:
+  version: 2
+
+  run_tests:
+    jobs:
+      - build
