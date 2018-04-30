@@ -7,12 +7,12 @@
 
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from django.contrib.auth.models import User
-from django.core.urlresolvers import reverse_lazy
 from rest_framework import status
 from coreapi import Client
 from coreapi.exceptions import ErrorMessage
 
 from wsse import settings
+from wsse.compat import reverse_lazy
 from wsse.server.django.wsse.models import UserSecret
 from wsse.client.coreapi.transport import WSSEAuthenticatedHTTPTransport
 

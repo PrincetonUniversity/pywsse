@@ -1,4 +1,0 @@
-coreapi>=2.1.1
-djangorestframework>=3.4.6
-mock>=2.0.0
-requests>=2.0.0

@@ -11,6 +11,7 @@ Authors: Rushy Panchal, Naphat Sanguansin, Adam Libresco, Jérémie Lumbroso.
 
 Introduction
 ============
+
 **pywsse** is an all-encompassing package to meet various needs for WSSE
 usage - both as an authentication backend (for various frameworks) and as a
 plug-and-play authentication mechanism for clients.
@@ -24,9 +25,11 @@ by both client and server.
 Frameworks/Package Support
 ==========================
 
+Python versions 2.7, 3.4, 3.5, and 3.6 are supported.
+
 The following backend frameworks are currently supported:
 
-* `Django REST Framework`_
+* `Django REST Framework`_ (versions 3.5 onwards with Django 1.11 onwards)
 
 In addition, the following client packages are supported:
 
@@ -138,7 +141,7 @@ and add it to your list of transports to :code:`coreapi.Client`:
   schema = client.get('http://api.example.com')
 
 You can also pass in any of the arguments or keyword arguments to
-`coreapi.transports.HTTPTransport` *after* the username and password.
+:code:`coreapi.transports.HTTPTransport` *after* the username and password.
 
 Development
 ===========
@@ -156,8 +159,7 @@ using either :code:`tox` or :code:`detox`:
   $ pip install -r requirements.txt
   $ detox
 
-.. note::
+:note:
 
   :code:`detox` is a parallel version of :code:`tox`. It only runs with Python
   2.6-2.7 (but it can and will run tests for Python 3.x versions).
-

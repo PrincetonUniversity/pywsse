@@ -13,10 +13,10 @@ import itertools
 
 from rest_framework.test import APITestCase, APIRequestFactory
 from rest_framework import status
-from django.core.urlresolvers import reverse_lazy
 from django.contrib.auth.models import User
 
 from wsse import utils, settings
+from wsse.compat import reverse_lazy
 from wsse.server.django.wsse.models import UserSecret
 
 def setUpModule():
