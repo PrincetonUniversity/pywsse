@@ -15,7 +15,7 @@ machine:
 dependencies:
   pre:
     - pip install tox
-    - pyenv global 2.7.14 3.4.8 3.5.5 3.6.5
+    - pyenv global 2.7.12 3.4.4 3.5.3 3.6.2
 
 test:
   override:
