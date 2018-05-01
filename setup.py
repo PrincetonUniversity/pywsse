@@ -10,7 +10,7 @@ from setuptools import setup, find_packages
 setup(
 	name = 'pywsse',
 	packages = find_packages(),
-	version = '0.1.4',
+	version = '0.1.5',
 	description = 'WSSE Authentication for various server and client backends.',
 	author = 'Rushy Panchal',
 	author_email = 'rushy.panchal@princeton.edu',
@@ -23,6 +23,7 @@ setup(
 		'Programming Language :: Python :: 3',
 		'Programming Language :: Python :: 3.4',
 		'Programming Language :: Python :: 3.5',
+		'Programming Language :: Python :: 3.6',
 		'Topic :: Internet :: WWW/HTTP :: WSGI :: Middleware',
 		'Topic :: Software Development :: Libraries :: Python Modules',
 		'Intended Audience :: Developers',
