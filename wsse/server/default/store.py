@@ -9,7 +9,7 @@ import sqlite3
 import contextlib
 import datetime
 
-from ... import settings
+from ... import settings, utc
 
 class SQLiteNonceStore(object):
 	'''
@@ -84,7 +84,7 @@ class SQLiteNonceStore(object):
 		:type timestamp: datetime.datetime
 		'''
 		if not timestamp:
-			timestamp = datetime.datetime.utcnow()
+			timestamp = datetime.datetime.utcnow().replace(tzinfo=utc.utc)
 
 		with self.__transaction() as cursor:
 			query = 'INSERT INTO {table} (nonce, ts) VALUES (:nonce, :ts)'.format(
@@ -111,7 +111,7 @@ class SQLiteNonceStore(object):
 		'''
 		Clean any expired nonces from the database.
 		'''
-		now = datetime.datetime.utcnow()
+		now = datetime.datetime.utcnow().replace(tzinfo=utc.utc)
 		exp_time = now - datetime.timedelta(seconds = settings.TIMESTAMP_DURATION)
 
 		with self.__transaction() as cursor:

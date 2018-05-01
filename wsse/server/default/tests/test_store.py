@@ -8,7 +8,7 @@
 from unittest import TestCase
 import datetime
 
-from wsse import settings
+from wsse import settings, utc
 from wsse.server.default import store
 
 class TestSQLiteNonceStore(TestCase):
@@ -114,7 +114,7 @@ class TestSQLiteNonceStore(TestCase):
 		'''
 		Add a nonce to the database. Checking if it's there should be successful.
 		'''
-		now = datetime.datetime.utcnow()
+		now = datetime.datetime.utcnow().replace(tzinfo=utc.utc).replace(tzinfo=utc.utc)
 		self.add_nonce('abc', now)
 
 		self.assertTrue(self.store.has_nonce('abc'))
@@ -124,7 +124,7 @@ class TestSQLiteNonceStore(TestCase):
 		'''
 		Clear the store. No entries should remain.
 		'''
-		now = datetime.datetime.utcnow()
+		now = datetime.datetime.utcnow().replace(tzinfo=utc.utc).replace(tzinfo=utc.utc)
 		self.add_nonce('abc', now)
 		self.add_nonce('def', now)
 
@@ -146,7 +146,7 @@ class TestSQLiteNonceStore(TestCase):
 		Add a nonce that is already expired. When cleaned, it should no longer
 		exist.
 		'''
-		now = datetime.datetime.utcnow()
+		now = datetime.datetime.utcnow().replace(tzinfo=utc.utc).replace(tzinfo=utc.utc)
 		self.add_nonce('abc',
 			now - datetime.timedelta(seconds = settings.TIMESTAMP_DURATION + 1))
 		self.add_nonce('def', now)

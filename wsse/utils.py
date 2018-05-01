@@ -16,6 +16,7 @@ import pydoc
 
 from . import settings
 from . import exceptions
+from . import utc
 
 try:
 	string_types = (str, basestring, unicode)
@@ -75,7 +76,7 @@ class TokenBuilder(object):
 		if not nonce:
 			nonce = _random_string()
 		if not timestamp:
-			timestamp = datetime.datetime.utcnow()
+			timestamp = datetime.datetime.utcnow().replace(tzinfo=utc.utc)
 
 		return make_token(self.username, self.password, nonce, timestamp)
 
@@ -105,7 +106,8 @@ def make_token(username, password, nonce, timestamp, ts_format = None,
 	:return: WSSE token
 	:rtype: str
 	'''
-	if timestamp < (datetime.datetime.utcnow() -
+	timestamp = _make_tz_aware(timestamp)
+	if timestamp < (datetime.datetime.utcnow().replace(tzinfo=utc.utc) -
 		datetime.timedelta(seconds = settings.TIMESTAMP_DURATION)):
 		logger.warning('Timestamp in make_token expired: %s (%ds duration)',
 			timestamp, settings.TIMESTAMP_DURATION)
@@ -158,10 +160,10 @@ def check_token(token, get_password = lambda username: username):
 		logger.info(msg)
 		raise exceptions.InvalidNonce(msg)
 
-	timestamp = _parse_timestamp(created)
+	timestamp = _make_tz_aware(_parse_timestamp(created))
 
 	if settings.SECURITY_CHECK_TIMESTAMP:
-		now = datetime.datetime.utcnow()
+		now = datetime.datetime.utcnow().replace(tzinfo=utc.utc)
 		expired_time = now - datetime.timedelta(
 			seconds = settings.TIMESTAMP_DURATION)
 		future_time = now + datetime.timedelta(seconds = settings.DRIFT_OFFSET)
@@ -427,3 +429,19 @@ def _django_header(header):
 	:rtype: str
 	'''
 	return 'HTTP_{}'.format(header.replace('-', '_'))
+
+def _make_tz_aware(dt):
+	'''
+	Make a datetime timezone-aware, if it is not already. This sets a default
+	of a UTC timezone.
+
+	:param dt: atetime object to make aware
+	:type dt: datetime.datetime
+
+	:return: timezone-aware datetime
+	:rtype; datetime.datetime
+	'''
+	if dt.tzinfo is None:
+		return dt.replace(tzinfo=utc.utc)
+
+	return dt

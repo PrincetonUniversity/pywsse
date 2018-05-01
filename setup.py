@@ -10,10 +10,10 @@ from setuptools import setup, find_packages
 setup(
 	name = 'pywsse',
 	packages = find_packages(),
-	version = '0.1.5',
+	version = '0.1.5.1',
 	description = 'WSSE Authentication for various server and client backends.',
 	author = 'Rushy Panchal',
-	author_email = 'rushy.panchal@princeton.edu',
+	author_email = 'rpanchal@princeton.edu',
 	url = 'https://github.com/PrincetonUniversity/pywsse',
 	keywords = ['REST', 'authentication', 'wsse'],
 	license = 'LGPLv3',

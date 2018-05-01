@@ -5,7 +5,7 @@
 # Date: September 1st, 2016
 # Description: Database models for storing the nonces and user secrets.
 
-import datetime
+from django.utils import timezone
 
 from django.db import models
 from django.contrib.auth.models import User
@@ -30,8 +30,7 @@ class WSSEEvent(models.Model):
 	# is not explicitly known. Instead, we default to using the current time in
 	# UTC, which guarantees the timezone, especially because all the timestamps
 	# are stored in UTC.
-	timestamp = models.DateTimeField(default = datetime.datetime.utcnow,
-		db_index = True)
+	timestamp = models.DateTimeField(default = timezone.now, db_index = True)
 
 class UserSecret(models.Model):
 	'''

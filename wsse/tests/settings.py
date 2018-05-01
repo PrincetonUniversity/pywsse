@@ -42,3 +42,6 @@ REST_FRAMEWORK = {
 			'rest_framework.permissions.IsAuthenticated',
 			),
 	}
+
+TIME_ZONE = 'UTC'
+USE_TZ = True

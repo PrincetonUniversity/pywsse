@@ -12,7 +12,7 @@ import datetime
 
 import mock
 
-from wsse import utils, settings, exceptions
+from wsse import utils, settings, exceptions, utc
 from wsse.server.default.store import SQLiteNonceStore
 
 class TestRandomString(TestCase):
@@ -376,7 +376,7 @@ class TestTokens(TestCase):
 		'''
 		Check a token that was just generated.
 		'''
-		now = datetime.datetime.utcnow()
+		now = datetime.datetime.utcnow().replace(tzinfo=utc.utc)
 		nonce = utils._random_string()
 		token = utils.make_token('user', 'secr3t', nonce, now)
 
@@ -388,7 +388,7 @@ class TestTokens(TestCase):
 		format.
 		'''
 		for fmt in settings.TIMESTAMP_FORMATS[1:]:
-			now = datetime.datetime.utcnow()
+			now = datetime.datetime.utcnow().replace(tzinfo=utc.utc)
 			nonce = utils._random_string()
 			token = utils.make_token('user', 'secr3t', nonce, now,
 				ts_format = fmt)
@@ -399,7 +399,7 @@ class TestTokens(TestCase):
 		'''
 		Check a token that has a timestamp in an invalid format.
 		'''
-		ts = datetime.datetime.utcnow()
+		ts = datetime.datetime.utcnow().replace(tzinfo=utc.utc)
 		nonce = utils._random_string()
 		token = utils.make_token('user', 'secr3t', nonce, ts,
 			ts_format = 'prefix-{}-suffix'.format(settings.TIMESTAMP_FORMATS[0]))
@@ -412,7 +412,7 @@ class TestTokens(TestCase):
 		Check a token that has a timestamp with drift. The user should still be
 		authenticated.
 		'''
-		ts = (datetime.datetime.utcnow() +
+		ts = (datetime.datetime.utcnow().replace(tzinfo=utc.utc) +
 			datetime.timedelta(seconds = settings.DRIFT_OFFSET - 1))
 		nonce = utils._random_string()
 		token = utils.make_token('user', 'secr3t', nonce, ts)
@@ -424,7 +424,7 @@ class TestTokens(TestCase):
 		Check a token that has a timestamp with excessive drift.
 		An error should be raised.
 		'''
-		ts = (datetime.datetime.utcnow() +
+		ts = (datetime.datetime.utcnow().replace(tzinfo=utc.utc) +
 			datetime.timedelta(seconds = settings.DRIFT_OFFSET + 1))
 		nonce = utils._random_string()
 		token = utils.make_token('user', 'secr3t', nonce, ts)
@@ -436,7 +436,7 @@ class TestTokens(TestCase):
 		'''
 		Check a token that has an expired timestamp. An error should be raised.
 		'''
-		ts = (datetime.datetime.utcnow() -
+		ts = (datetime.datetime.utcnow().replace(tzinfo=utc.utc) -
 			datetime.timedelta(seconds = settings.TIMESTAMP_DURATION + 1))
 		nonce = utils._random_string()
 		token = utils.make_token('user', 'secr3t', nonce, ts)
@@ -449,7 +449,7 @@ class TestTokens(TestCase):
 		Check a token that has a timestamp in the future. An error should be
 		raised.
 		'''
-		ts = (datetime.datetime.utcnow() +
+		ts = (datetime.datetime.utcnow().replace(tzinfo=utc.utc) +
 			datetime.timedelta(seconds = settings.DRIFT_OFFSET + 1))
 		nonce = utils._random_string()
 		token = utils.make_token('user', 'secr3t', nonce, ts)
@@ -462,7 +462,7 @@ class TestTokens(TestCase):
 		With disabled timestamp security, invalid timestamps should still
 		succeed.
 		'''
-		now = datetime.datetime.utcnow()
+		now = datetime.datetime.utcnow().replace(tzinfo=utc.utc)
 		nonce = utils._random_string()
 		past = now - datetime.timedelta(seconds = settings.TIMESTAMP_DURATION + 1)
 		past_token = utils.make_token('user', 'secr3t', nonce, past)
@@ -490,7 +490,7 @@ class TestTokens(TestCase):
 		'''
 		Check a token with a short nonce - it should be rejected.
 		'''
-		now = datetime.datetime.utcnow()
+		now = datetime.datetime.utcnow().replace(tzinfo=utc.utc)
 		nonce = utils._random_string(length = settings.NONCE_LENGTH - 1)
 		token = utils.make_token('user', 'secr3t', nonce, now)
 
@@ -501,7 +501,7 @@ class TestTokens(TestCase):
 		'''
 		Check a token with a long nonce - it should be rejected.
 		'''
-		now = datetime.datetime.utcnow()
+		now = datetime.datetime.utcnow().replace(tzinfo=utc.utc)
 		nonce = utils._random_string() + 'a'
 		token = utils.make_token('user', 'secr3t', nonce, now)
 
@@ -512,7 +512,7 @@ class TestTokens(TestCase):
 		'''
 		Check a token twice - a replay attack should be detected.
 		'''
-		now = datetime.datetime.utcnow()
+		now = datetime.datetime.utcnow().replace(tzinfo=utc.utc)
 		nonce = utils._random_string()
 		token = utils.make_token('user', 'secr3t', nonce, now)
 
@@ -525,7 +525,7 @@ class TestTokens(TestCase):
 		Check a token twice, but with nonce security disabled. A replay attack
 		should not be detected.
 		'''
-		now = datetime.datetime.utcnow()
+		now = datetime.datetime.utcnow().replace(tzinfo=utc.utc)
 		nonce = utils._random_string()
 		token = utils.make_token('user', 'secr3t', nonce, now)
 
@@ -541,7 +541,7 @@ class TestTokens(TestCase):
 		'''
 		Check a valid token with an invalid password.
 		'''
-		now = datetime.datetime.utcnow()
+		now = datetime.datetime.utcnow().replace(tzinfo=utc.utc)
 		nonce = utils._random_string()
 		token = utils.make_token('user', 'wrong password', nonce, now)
 
@@ -553,7 +553,7 @@ class TestTokens(TestCase):
 		raised.
 		'''
 		users = {'username': None}
-		now = datetime.datetime.utcnow()
+		now = datetime.datetime.utcnow().replace(tzinfo=utc.utc)
 		nonce = utils._random_string()
 		token = utils.make_token('user', 'secr3t', nonce, now)
 
@@ -564,7 +564,7 @@ class TestTokens(TestCase):
 		'''
 		Check a valid token with an alternative algorithm.
 		'''
-		now = datetime.datetime.utcnow()
+		now = datetime.datetime.utcnow().replace(tzinfo=utc.utc)
 		nonce = utils._random_string()
 		token = utils.make_token('user', 'secr3t', nonce, now,
 			algorithm = 'sha512')
@@ -578,7 +578,7 @@ class TestTokens(TestCase):
 		Check a valid token with prohibited algorithms. An error should be raised.
 		'''
 		for algorithm in settings.PROHIBITED_DIGEST_ALGORITHMS:
-			now = datetime.datetime.utcnow()
+			now = datetime.datetime.utcnow().replace(tzinfo=utc.utc)
 			nonce = utils._random_string()
 			token = utils.make_token('user', 'secr3t', nonce, now,
 				algorithm = algorithm.lower())

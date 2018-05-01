@@ -6,6 +6,7 @@
 # Description: Store implementation for the Django server.
 
 import datetime
+from django.utils import timezone
 
 from .models import WSSEEvent
 from .... import settings
@@ -45,7 +46,7 @@ class DjangoNonceStore(object):
 		'''
 		Clean any expired nonces from the database.
 		'''
-		now = datetime.datetime.utcnow().replace(microsecond = 0)
+		now = timezone.now().replace(microsecond = 0)
 		exp_time = now - datetime.timedelta(seconds = settings.TIMESTAMP_DURATION)
 
 		WSSEEvent.objects.filter(timestamp__lt = exp_time).delete()

@@ -14,6 +14,7 @@ import itertools
 from rest_framework.test import APITestCase, APIRequestFactory
 from rest_framework import status
 from django.contrib.auth.models import User
+from django.utils import timezone
 
 from wsse import utils, settings
 from wsse.compat import reverse_lazy
@@ -113,7 +114,7 @@ class WSSEAuthenticationTests(APITestCase):
 			username = user.username
 
 		if timestamp is None:
-			now = datetime.datetime.utcnow()
+			now = timezone.now()
 			timestamp = now.strftime(settings.TIMESTAMP_FORMATS[0])
 
 		if nonce is None:
@@ -163,7 +164,7 @@ class WSSEAuthenticationTests(APITestCase):
 		Authenticate with a valid username, using an alternative timestamp format.
 		The authentication should succeed.
 		'''
-		now = datetime.datetime.utcnow()
+		now = timezone.now()
 		timestamp = now.strftime('%Y-%m-%dT%H:%M:%S.%fZ')
 
 		with self.http_auth(self.make_header(timestamp = timestamp)):
@@ -192,7 +193,7 @@ class WSSEAuthenticationTests(APITestCase):
 		Authenticate with a valid username with drift on the timestamp.
 		The authentication should succeed.
 		'''
-		ts = (datetime.datetime.utcnow() +
+		ts = (timezone.now() +
 			datetime.timedelta(seconds = settings.DRIFT_OFFSET - 1))
 		timestamp = ts.strftime('%Y-%m-%dT%H:%M:%S.%fZ')
 
@@ -234,7 +235,7 @@ class WSSEAuthenticationTests(APITestCase):
 		Perform a request with an invalid timestamp format.
 		Authentication should not succeed.
 		'''
-		now = datetime.datetime.utcnow()
+		now = timezone.now()
 		timestamp = now.strftime("%m/%d/%Y, %M:%S.%f")
 
 		with self.http_auth(self.make_header(timestamp = timestamp)):
@@ -246,7 +247,7 @@ class WSSEAuthenticationTests(APITestCase):
 		'''
 		Authenticate an expired timestamp. The authentication should not succeed.
 		'''
-		now = datetime.datetime.utcnow() - datetime.timedelta(
+		now = timezone.now() - datetime.timedelta(
 			seconds = settings.TIMESTAMP_DURATION + 1)
 		timestamp = now.strftime('%Y-%m-%dT%H:%M:%S.%fZ')
 
@@ -259,7 +260,7 @@ class WSSEAuthenticationTests(APITestCase):
 		'''
 		Authenticate a future timestamp. The authentication should not succeed.
 		'''
-		now = datetime.datetime.utcnow() + datetime.timedelta(
+		now = timezone.now() + datetime.timedelta(
 			seconds = settings.TIMESTAMP_DURATION + 1)
 		timestamp = now.strftime('%Y-%m-%dT%H:%M:%S.%fZ')
 
