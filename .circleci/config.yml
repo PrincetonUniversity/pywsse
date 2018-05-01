@@ -16,15 +16,16 @@ jobs:
           key: wsse-{{ .Branch }}-{{ checksum "requirements.txt" }}-{{ checksum "tox.ini" }}
       - run: |
           pyenv install -s 2.7.14
-          pyenv install -s 3.4.4
-          pyenv install -s 3.5.3
-          pyenv install -s 3.6.2
-      - run: pyenv global 2.7.14 3.4.4 3.5.3 3.6.2
-      - run: pyenv init > /dev/null && pyenv shell && tox
+          pyenv install -s 3.4.6
+          pyenv install -s 3.5.4
+          pyenv install -s 3.6.5
+      - run: pyenv global 2.7.14 3.4.6 3.5.4 3.6.5
+      - run: eval "$(pyenv init -)" && tox
       - save_cache:
           key: wsse-{{ .Branch }}-{{ checksum "requirements.txt" }}-{{ checksum "tox.ini" }}
           paths:
             - .tox
+            - /pyenv/
     environment:
       ENV: test
       BUILD_CI: true
