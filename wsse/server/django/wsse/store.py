@@ -9,7 +9,7 @@ import datetime
 from django.utils import timezone
 
 from .models import WSSEEvent
-from .... import settings
+from .... import settings, utils
 
 class DjangoNonceStore(object):
 	'''
@@ -25,9 +25,9 @@ class DjangoNonceStore(object):
 		:param timestamp: timestamp the nonce was generated at
 		:type timestamp: datetime.datetime
 		'''
-		kwargs = {'nonce': nonce}
-		if timestamp:
-			kwargs['timestamp'] = timestamp
+		kwargs = {'nonce': utils._from_bytes(nonce), 'timestamp': timestamp}
+		if not timestamp:
+			kwargs['timestamp'] = timezone.now()
 
 		WSSEEvent.objects.create(**kwargs)
 
@@ -39,8 +39,7 @@ class DjangoNonceStore(object):
 		:type nonce: str
 		'''
 		self.clean_expired_nonces()
-
-		return WSSEEvent.objects.filter(nonce = nonce).exists()
+		return WSSEEvent.objects.filter(nonce = utils._from_bytes(nonce)).exists()
 
 	def clean_expired_nonces(self):
 		'''
