@@ -52,3 +52,16 @@ class TestDjangoNonceStore(TransactionTestCase,
 		:type ts: datetime.datetime
 		'''
 		WSSEEvent.objects.create(nonce = nonce, timestamp = ts)
+
+	def test_add_nonce_bytestring(self):
+		'''
+		Adding a nonce as bytes should succeed and be present in the database
+		(as a string).
+		'''
+		self.store.add_nonce(b'abc')
+
+		count = self.count_nonces()
+		nonce = self.get_nonces()[0]
+		
+		self.assertEqual(count, 1)
+		self.assertEqual(nonce, 'abc')
